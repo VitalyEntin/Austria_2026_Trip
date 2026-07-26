@@ -1,4 +1,4 @@
-const CACHE_NAME = "austria-2026-v4";
+const CACHE_NAME = "austria-2026-v5";
 const CORE = ["./", "./manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {

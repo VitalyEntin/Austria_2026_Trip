@@ -22,7 +22,6 @@ import {
   MapPin,
   Menu,
   MountainSnow,
-  Navigation,
   Plane,
   Plus,
   RotateCcw,
@@ -146,6 +145,11 @@ function collectionFor(place: Place): Collection {
   if (place.category === "Food & Restaurants") return "Food";
   if (place.category === "Shopping & Supplies") return "Shopping";
   return "Attractions";
+}
+
+function googleMapsUrl(place: Place) {
+  const query = encodeURIComponent(`${place.lat},${place.lon}`);
+  return `https://www.google.com/maps/search/?api=1&query=${query}`;
 }
 
 const defaultItinerary: DayPlan[] = [
@@ -1079,12 +1083,13 @@ export default function TripApp() {
                         </button>
                         <a
                           className="icon-button"
-                          href={`https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lon}`}
+                          href={googleMapsUrl(place)}
                           target="_blank"
                           rel="noreferrer"
-                          aria-label={`Navigate to ${place.name}`}
+                          aria-label={`Open ${place.name} in Google Maps`}
+                          title="Open in Google Maps"
                         >
-                          <Navigation size={18} />
+                          <MapPin size={18} />
                         </a>
                       </div>
                     </article>
@@ -1590,13 +1595,14 @@ export default function TripApp() {
                         Full details
                       </button>
                       <a
-                        className="icon-button"
-                        href={`https://www.google.com/maps/dir/?api=1&destination=${selectedPlace.lat},${selectedPlace.lon}`}
+                        className="secondary-button"
+                        href={googleMapsUrl(selectedPlace)}
                         target="_blank"
                         rel="noreferrer"
-                        aria-label="Open navigation"
+                        aria-label={`Open ${selectedPlace.name} in Google Maps`}
                       >
-                        <Navigation size={18} />
+                        <MapPin size={17} />
+                        Google Maps
                       </a>
                     </div>
                   </aside>
@@ -1836,11 +1842,12 @@ export default function TripApp() {
                 )}
                 <a
                   className="secondary-button"
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${selectedPlace.lat},${selectedPlace.lon}`}
+                  href={googleMapsUrl(selectedPlace)}
                   target="_blank"
                   rel="noreferrer"
+                  aria-label={`Open ${selectedPlace.name} in Google Maps`}
                 >
-                  <Navigation size={17} /> Navigate
+                  <MapPin size={17} /> Google Maps
                 </a>
                 {selectedPlace.official && (
                   <a
