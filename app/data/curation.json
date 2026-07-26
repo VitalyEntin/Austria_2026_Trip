@@ -1,6 +1,27 @@
 {
   "removeIds": ["place-91"],
   "overrides": {
+    "place-35": {
+      "name": "Hagan Lodges - Lodges Sandling",
+      "lat": 47.661053,
+      "lon": 13.742943,
+      "priority": "Home",
+      "duration": "17-24 Aug",
+      "notes": "First family accommodation. This is the exact location supplied for the trip.",
+      "tips": "Use this pin as the starting point for first-base driving estimates.",
+      "august_status": "Booked accommodation"
+    },
+    "place-36": {
+      "name": "POP-UP LIVING Zell am See",
+      "lat": 47.3045791,
+      "lon": 12.7936416,
+      "priority": "Home",
+      "duration": "24-29 Aug",
+      "location": "Karl-Flieher-Straße 1, 5700 Zell am See",
+      "notes": "Second family accommodation at Karl-Flieher-Straße 1, 5700 Zell am See.",
+      "tips": "Use this pin as the starting point for second-base driving estimates.",
+      "august_status": "Booked accommodation"
+    },
     "place-68": { "google_rating": 4.7, "google_review_count": 1814, "price_range": "€€", "rating_checked": "26 Jul 2026", "kind": "Traditional Austrian alpine inn" },
     "place-69": { "google_rating": 4.5, "google_review_count": 183, "price_range": "€20-30", "rating_checked": "26 Jul 2026", "kind": "Austrian and alpine food" },
     "place-70": { "google_rating": 4.7, "google_review_count": 459, "price_range": "€20-60", "rating_checked": "26 Jul 2026", "kind": "Modern Austrian and regional food", "top_pick": true },

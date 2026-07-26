@@ -4,6 +4,7 @@ import {
   Accessibility,
   Baby,
   CalendarDays,
+  CarFront,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -15,6 +16,7 @@ import {
   ExternalLink,
   Eye,
   Gauge,
+  House,
   ImageOff,
   Map as MapIcon,
   MapPin,
@@ -41,7 +43,7 @@ import curationJson from "./data/curation.json";
 import placeImagesJson from "./data/place-images.json";
 import placesJson from "./data/places.json";
 
-type View = "overview" | "today" | "itinerary" | "explore" | "food" | "shopping" | "map";
+type View = "overview" | "today" | "itinerary" | "events" | "explore" | "food" | "shopping" | "map";
 type Collection = "Attractions" | "Food" | "Shopping";
 
 type Place = {
@@ -349,6 +351,84 @@ const baseCoordinates: Record<string, { lat: number; lon: number; label: string 
   "Salzburg → Zell": { lat: 47.8007, lon: 13.0453, label: "Salzburg" },
   "Vienna Airport": { lat: 48.1197, lon: 16.5636, label: "Vienna Airport" },
 };
+const homePlaceIds = new Set(["place-35", "place-36"]);
+
+function isHomePlace(place: Place) {
+  return homePlaceIds.has(place.id);
+}
+
+function baseForPlace(place: Place) {
+  if (place.base.includes("First")) return "Altaussee";
+  if (place.base.includes("Second")) return "Zell am See";
+  if (/arrival|departure/i.test(place.base)) return "Vienna Airport";
+  if (/transfer|salzburg/i.test(place.base)) return "Salzburg → Zell";
+  return "Altaussee";
+}
+
+function distanceKm(
+  from: { lat: number; lon: number },
+  to: { lat: number; lon: number },
+) {
+  const radians = (value: number) => (value * Math.PI) / 180;
+  const earthRadius = 6371;
+  const latitudeDelta = radians(to.lat - from.lat);
+  const longitudeDelta = radians(to.lon - from.lon);
+  const a =
+    Math.sin(latitudeDelta / 2) ** 2 +
+    Math.cos(radians(from.lat)) *
+      Math.cos(radians(to.lat)) *
+      Math.sin(longitudeDelta / 2) ** 2;
+  return earthRadius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function approximateDrive(place: Place, baseName = baseForPlace(place)) {
+  if (isHomePlace(place)) return "Home";
+  const base = baseCoordinates[baseName] ?? baseCoordinates.Altaussee;
+  const directDistance = distanceKm(base, place);
+  const estimatedRoadKm = directDistance * (directDistance > 90 ? 1.18 : 1.38) + 2;
+  const averageSpeed =
+    estimatedRoadKm < 12 ? 34 : estimatedRoadKm < 50 ? 47 : estimatedRoadKm < 120 ? 58 : 76;
+  const minutes = Math.max(5, Math.round((estimatedRoadKm / averageSpeed) * 12) * 5);
+  const source = base.label;
+  if (minutes >= 120) {
+    const hours = Math.floor(minutes / 60);
+    const remainder = minutes % 60;
+    return `~${hours}h${remainder ? ` ${remainder}m` : ""} from ${source}`;
+  }
+  if (minutes >= 60) return `~1h ${minutes - 60}m from ${source}`;
+  return `~${minutes} min from ${source}`;
+}
+
+function itineraryDrive(day: DayPlan, place?: Place) {
+  if (day.date === "2026-08-16") return "~5 min from the airport to the overnight area";
+  if (day.date === "2026-08-17") return "~3h 10m total toward Hagan Lodges, plus stops";
+  if (day.date === "2026-08-24") return "~55m to Salzburg, then ~1h 15m to POP-UP LIVING";
+  if (day.date === "2026-08-29") return "~4h 10m from POP-UP LIVING to Vienna Airport";
+  if (day.date === "2026-08-30") return "~5 min from the airport hotel to the terminal";
+  return place ? approximateDrive(place, day.base) : "";
+}
+
+function itineraryStory(day: DayPlan, place?: Place) {
+  if (day.date === "2026-08-16") {
+    return "Land at Vienna Airport at 18:00, collect the rental car and make only the short drive to the airport-area hotel. Dinner and sleep are the plan.";
+  }
+  if (day.date === "2026-08-17") {
+    return `Leave the Vienna Airport area after breakfast and drive west toward Altaussee. Stop at ${place?.name || "Gmunden"} for lunch and a walk, then continue to Hagan Lodges, buy groceries and settle in.`;
+  }
+  if (day.date === "2026-08-24") {
+    return `Check out of Hagan Lodges and drive about 55 minutes to Salzburg. Explore the centre and ${place?.name || "one main attraction"}, then continue about 1 hour 15 minutes to POP-UP LIVING in Zell am See.`;
+  }
+  if (day.date === "2026-08-29") {
+    return "Leave POP-UP LIVING after breakfast for the roughly 4 hour 10 minute drive to the Vienna Airport area. Plan one substantial lunch and playground break, then check in and prepare for the morning flight.";
+  }
+  if (day.date === "2026-08-30") {
+    return "Make the short airport transfer early, return the car if needed and aim to be inside the terminal around 07:00-07:30 for the 10:00 flight.";
+  }
+  if (!place) {
+    return "This day has no main outing yet. Choose one attraction and keep the rest of the day flexible.";
+  }
+  return `Start at ${baseCoordinates[day.base]?.label || day.base}, then drive to ${place.name}. The estimated drive is ${approximateDrive(place, day.base).replace(" from", " each way from")}. Allow ${place.duration.toLowerCase()} for the visit. ${place.notes}`;
+}
 
 function isoToday() {
   const now = new Date();
@@ -473,10 +553,12 @@ function useLocalStorageState<T>(key: string, fallback: T) {
 
 function LeafletMap({
   shownPlaces,
+  itineraryPlaceIds,
   selected,
   onSelect,
 }: {
   shownPlaces: Place[];
+  itineraryPlaceIds: Set<string>;
   selected: Place | null;
   onSelect: (place: Place) => void;
 }) {
@@ -516,11 +598,15 @@ function LeafletMap({
       shownPlaces.forEach((place) => {
         const color = categoryMeta[place.category]?.color ?? "#5f6d79";
         const isSelected = selected?.id === place.id;
+        const isHome = isHomePlace(place);
+        const isItineraryPlace = itineraryPlaceIds.has(place.id);
         const icon = L.divIcon({
           className: "map-dot-wrap",
-          html: `<span class="map-dot${isSelected ? " is-selected" : ""}" style="--pin:${color}"></span>`,
-          iconSize: [24, 24],
-          iconAnchor: [12, 12],
+          html: isHome
+            ? `<span class="map-home-pin${isSelected ? " is-selected" : ""}" aria-hidden="true"><b>⌂</b></span>`
+            : `<span class="map-dot${isSelected ? " is-selected" : ""}${isItineraryPlace ? " is-itinerary" : ""}" style="--pin:${color}"></span>`,
+          iconSize: isHome ? [34, 34] : [24, 24],
+          iconAnchor: isHome ? [17, 30] : [12, 12],
         });
         const marker = L.marker([place.lat, place.lon], { icon })
           .bindTooltip(place.name, { direction: "top", offset: [0, -8] })
@@ -538,7 +624,7 @@ function LeafletMap({
     return () => {
       active = false;
     };
-  }, [onSelect, selected, shownPlaces]);
+  }, [itineraryPlaceIds, onSelect, selected, shownPlaces]);
 
   return <div ref={containerRef} className="leaflet-map" aria-label="Interactive attraction map" />;
 }
@@ -563,6 +649,7 @@ export default function TripApp() {
     Food: false,
     Shopping: false,
   });
+  const [itineraryMapOnly, setItineraryMapOnly] = useState(false);
   const [forecast, setForecast] = useState<Forecast | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherUpdated, setWeatherUpdated] = useState("");
@@ -698,9 +785,25 @@ export default function TripApp() {
     });
   }, [baseFilter, categoryFilter, collectionFilter, query, weatherFilter]);
 
+  const itineraryPlaceIds = useMemo(
+    () =>
+      new Set(
+        itinerary
+          .map((day) => placeByName.get(day.plan)?.id)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    [itinerary],
+  );
+
   const mapPlaces = useMemo(() => {
+    if (itineraryMapOnly) {
+      return places.filter(
+        (place) => homePlaceIds.has(place.id) || itineraryPlaceIds.has(place.id),
+      );
+    }
     const term = query.trim().toLowerCase();
     return places.filter((place) => {
+      if (isHomePlace(place)) return true;
       if (!mapLayers[collectionFor(place)]) return false;
       if (
         term &&
@@ -718,9 +821,12 @@ export default function TripApp() {
         return false;
       return true;
     });
-  }, [baseFilter, mapLayers, query]);
+  }, [baseFilter, itineraryMapOnly, itineraryPlaceIds, mapLayers, query]);
 
   const eventsToday = events.filter((event) => event.date === selectedDate);
+  const selectedPlanPlace = selectedDay?.plan ? placeByName.get(selectedDay.plan) : undefined;
+  const selectedDayEvents = events.filter((event) => event.date === selectedDate);
+  const selectedDrive = selectedDay ? itineraryDrive(selectedDay, selectedPlanPlace) : "";
   const editingDay = editingDate ? itinerary.find((day) => day.date === editingDate) : undefined;
 
   function stepDay(direction: number) {
@@ -792,6 +898,7 @@ export default function TripApp() {
     { id: "overview", label: "Overview", icon: Plane },
     { id: "today", label: "Today", icon: Compass },
     { id: "itinerary", label: "Itinerary", icon: CalendarDays },
+    { id: "events", label: "Events", icon: TicketCheck },
     { id: "explore", label: "Explore", icon: Search },
     { id: "food", label: "Food", icon: Utensils },
     { id: "shopping", label: "Shopping", icon: ShoppingBag },
@@ -840,7 +947,7 @@ export default function TripApp() {
           <button className="icon-button mobile-only" onClick={() => setMobileMenu(true)} aria-label="Open menu">
             <Menu size={21} />
           </button>
-          {view === "overview" ? (
+          {view === "overview" || view === "events" ? (
             <button className="trip-window" onClick={() => navigateTo("itinerary")}>
               <CalendarDays size={17} />
               <span>16-30 August 2026</span>
@@ -866,7 +973,7 @@ export default function TripApp() {
           )}
           <div className="topbar-place">
             <MapPin size={16} />
-            <span>{view === "overview" ? "Austria" : activeBase.label}</span>
+            <span>{view === "overview" || view === "events" ? "Austria" : activeBase.label}</span>
           </div>
         </header>
 
@@ -954,6 +1061,7 @@ export default function TripApp() {
                           </div>
                           <p>{place.notes}</p>
                           <div className="facts-row">
+                            <span><CarFront size={15} /> {approximateDrive(place, selectedDay?.base)}</span>
                             <span><Gauge size={15} /> {place.duration}</span>
                             <span><Baby size={15} /> Age 3: {place.age3}/5</span>
                             <span><Accessibility size={15} /> {place.stroller}</span>
@@ -1022,6 +1130,42 @@ export default function TripApp() {
             </section>
           )}
 
+          {view === "events" && (
+            <section className="view">
+              <div className="page-heading">
+                <div>
+                  <span className="eyebrow">Time-sensitive plans</span>
+                  <h1>Events</h1>
+                  <p>Concerts, festivals and dated activities during the trip.</p>
+                </div>
+              </div>
+              <div className="events-page">
+                {events.map((event) => (
+                  <button
+                    className="event-row event-page-row"
+                    key={`${event.date}-${event.title}`}
+                    onClick={() => {
+                      setSelectedDate(event.date);
+                      navigateTo("today");
+                    }}
+                  >
+                    <span className={`event-icon ${event.kind}`}><TicketCheck size={18} /></span>
+                    <span className="event-date">
+                      <strong>{new Date(`${event.date}T12:00:00`).getDate()}</strong>
+                      <small>Aug</small>
+                    </span>
+                    <span>
+                      <strong>{event.title}</strong>
+                      <small>{event.time} · {event.place}</small>
+                      <p>{event.note}</p>
+                    </span>
+                    <ChevronRight size={18} />
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
           {view === "itinerary" && (
             <section className="view">
               <div className="page-heading">
@@ -1039,6 +1183,7 @@ export default function TripApp() {
                 <div className="itinerary-list">
                   {itinerary.map((day) => {
                     const plan = placeByName.get(day.plan);
+                    const dayDrive = itineraryDrive(day, plan);
                     const dayEvents = events.filter((event) => event.date === day.date);
                     const active = day.date === selectedDate;
                     return (
@@ -1068,8 +1213,10 @@ export default function TripApp() {
                             {plan ? `Main: ${plan.name}` : "No main outing planned"}
                             {plan && <ChevronRight size={16} />}
                           </button>
+                          {dayDrive && <small><CarFront size={12} /> {dayDrive}</small>}
                           {day.backup && <small>Weather backup: {day.backup}</small>}
                           {day.note && <p>{day.note}</p>}
+                          {active && <p className="mobile-day-story">{itineraryStory(day, plan)}</p>}
                           {dayEvents.map((event) => (
                             <span className="event-pill" key={event.title}>
                               <TicketCheck size={13} /> {event.time} · {event.title}
@@ -1091,19 +1238,46 @@ export default function TripApp() {
                   })}
                 </div>
                 <aside className="itinerary-side">
-                  <span className="eyebrow">Selected day</span>
+                  <span className="eyebrow">How this day looks</span>
                   <h2>{longDate(selectedDate)}</h2>
-                  <p>{selectedDay?.note || "No additional note."}</p>
-                  {selectedDay?.plan && placeByName.get(selectedDay.plan) && (
-                    <button className="mini-place" onClick={() => openPlace(placeByName.get(selectedDay.plan)!)}>
+                  <h3>{selectedDay?.label}</h3>
+                  {selectedDay ? (
+                    <>
+                      <p className="day-story">{itineraryStory(selectedDay, selectedPlanPlace)}</p>
+                      {selectedPlanPlace && (
+                        <div className="day-story-facts">
+                          <span><CarFront size={15} /><strong>{selectedDrive}</strong><small>Approximate driving</small></span>
+                          <span><Gauge size={15} /><strong>{selectedPlanPlace.duration}</strong><small>Visit length</small></span>
+                          <span><CloudSun size={15} /><strong>{selectedPlanPlace.weather}</strong><small>Best conditions</small></span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <p className="day-story">This day has no main outing yet. Choose one attraction and keep the rest of the day flexible.</p>
+                  )}
+                  {selectedDay?.note && <p>{selectedDay.note}</p>}
+                  {selectedPlanPlace && (
+                    <button className="mini-place" onClick={() => openPlace(selectedPlanPlace)}>
                       <MapPin size={18} />
                       <span>
-                        <strong>{selectedDay.plan}</strong>
-                        <small>{placeByName.get(selectedDay.plan)?.duration}</small>
+                        <strong>{selectedPlanPlace.name}</strong>
+                        <small>Open full place details</small>
                       </span>
                       <ChevronRight size={17} />
                     </button>
                   )}
+                  {selectedDay?.backup && (
+                    <div className="day-backup">
+                      <strong>Weather backup</strong>
+                      <span>{selectedDay.backup}</span>
+                    </div>
+                  )}
+                  {selectedDayEvents.map((event) => (
+                    <div className="day-event" key={`${event.date}-${event.title}`}>
+                      <TicketCheck size={15} />
+                      <span><strong>{event.time} · {event.title}</strong><small>{event.place}</small></span>
+                    </div>
+                  ))}
                   <button className="primary-button wide" onClick={() => setEditingDate(selectedDate)}>
                     Adjust this day
                   </button>
@@ -1221,7 +1395,7 @@ export default function TripApp() {
               <div className={`place-table-head ${collectionFilter.toLowerCase()}-columns`}>
                 <span>{collectionFilter === "Food" ? "Restaurant" : collectionFilter === "Shopping" ? "Shop" : "Place"}</span>
                 <span>{collectionFilter === "Attractions" ? "Best base" : "Area"}</span>
-                <span>{collectionFilter === "Attractions" ? "Time" : "Type"}</span>
+                <span>{collectionFilter === "Attractions" ? "Visit / drive" : "Type"}</span>
                 <span>{collectionFilter === "Attractions" ? "Weather" : collectionFilter === "Food" ? "Price" : "Best use"}</span>
                 <span>{collectionFilter === "Attractions" ? "Status" : collectionFilter === "Food" ? "Google rating" : "Priority"}</span>
               </div>
@@ -1248,10 +1422,23 @@ export default function TripApp() {
                             {place.kind} · {place.price_range || "Price not listed"}
                           </span>
                         )}
+                        <span className="mobile-drive-meta"><CarFront size={11} /> {approximateDrive(place)}</span>
                       </span>
                     </span>
-                    <span>{collectionFilter === "Attractions" ? place.base : place.location}</span>
-                    <span>{collectionFilter === "Attractions" ? place.duration : place.kind}</span>
+                    <span className="area-cell">
+                      {collectionFilter === "Attractions" ? place.base : place.location}
+                      {collectionFilter !== "Attractions" && <small><CarFront size={11} /> {approximateDrive(place)}</small>}
+                    </span>
+                    <span>
+                      {collectionFilter === "Attractions" ? (
+                        <span className="drive-cell">
+                          <strong>{place.duration}</strong>
+                          <small><CarFront size={11} /> {approximateDrive(place)}</small>
+                        </span>
+                      ) : (
+                        place.kind
+                      )}
+                    </span>
                     <span>
                       {collectionFilter === "Attractions"
                         ? place.weather
@@ -1309,18 +1496,20 @@ export default function TripApp() {
                     { id: "Shopping" as Collection, icon: ShoppingBag },
                   ]).map((layer) => {
                     const Icon = layer.icon;
-                    const active = mapLayers[layer.id];
+                    const active = !itineraryMapOnly && mapLayers[layer.id];
                     return (
                       <button
                         key={layer.id}
                         className={`map-layer ${layer.id.toLowerCase()}${active ? " active" : ""}`}
                         aria-pressed={active}
-                        onClick={() =>
+                        onClick={() => {
+                          const wasItineraryOnly = itineraryMapOnly;
+                          setItineraryMapOnly(false);
                           setMapLayers((current) => ({
                             ...current,
-                            [layer.id]: !current[layer.id],
-                          }))
-                        }
+                            [layer.id]: wasItineraryOnly ? true : !current[layer.id],
+                          }));
+                        }}
                       >
                         <Icon size={15} />
                         <span>{layer.id}</span>
@@ -1331,19 +1520,40 @@ export default function TripApp() {
                       </button>
                     );
                   })}
+                  <button
+                    className={`map-layer itinerary${itineraryMapOnly ? " active" : ""}`}
+                    aria-pressed={itineraryMapOnly}
+                    onClick={() => setItineraryMapOnly((current) => !current)}
+                  >
+                    <CalendarDays size={15} />
+                    <span>Itinerary + homes</span>
+                    <span className="layer-state" aria-hidden="true">
+                      <span className="layer-switch" />
+                      <b>{itineraryMapOnly ? "ON" : "OFF"}</b>
+                    </span>
+                  </button>
+                  <span className="map-home-legend"><House size={15} /> Homes always shown</span>
                 </div>
               </div>
               <div className="map-stage">
-                <LeafletMap shownPlaces={mapPlaces} selected={selectedPlace} onSelect={setSelectedPlace} />
+                <LeafletMap
+                  shownPlaces={mapPlaces}
+                  itineraryPlaceIds={itineraryPlaceIds}
+                  selected={selectedPlace}
+                  onSelect={setSelectedPlace}
+                />
                 {selectedPlace && (
                   <aside className="map-preview">
                     <button className="icon-button close-preview" onClick={() => setSelectedPlace(null)} aria-label="Close place preview">
                       <X size={18} />
                     </button>
-                    <span className="category-label">{categoryMeta[selectedPlace.category]?.short}</span>
+                    <span className="category-label">
+                      {isHomePlace(selectedPlace) ? "Home" : categoryMeta[selectedPlace.category]?.short}
+                    </span>
                     <h2>{selectedPlace.name}</h2>
                     <p>{selectedPlace.notes}</p>
                     <div className="facts-stack">
+                      <span><CarFront size={15} /> {approximateDrive(selectedPlace)}</span>
                       <span><Gauge size={15} /> {selectedPlace.route_use || selectedPlace.duration}</span>
                       <span>
                         {collectionFor(selectedPlace) === "Food" ? (
@@ -1410,33 +1620,36 @@ export default function TripApp() {
                 <span><CalendarDays size={18} /><strong>Daily rhythm</strong><small>One main outing plus a weather backup</small></span>
               </div>
               <div className="trip-grid">
-                <section className="trip-section events-section">
+                <section className="trip-section overview-route-section">
                   <div className="section-heading compact-heading">
                     <div>
-                      <span className="eyebrow">Time-sensitive</span>
-                      <h2>Events</h2>
+                      <span className="eyebrow">The whole journey</span>
+                      <h2>Trip overview</h2>
                     </div>
+                    <button className="text-button" onClick={() => navigateTo("itinerary")}>
+                      Open itinerary <ChevronRight size={15} />
+                    </button>
                   </div>
-                  <div className="events-list">
-                    {events.map((event) => (
-                      <button
-                        className="event-row"
-                        key={`${event.date}-${event.title}`}
-                        onClick={() => {
-                          setSelectedDate(event.date);
-                          navigateTo("today");
-                        }}
-                      >
-                        <span className={`event-icon ${event.kind}`}><TicketCheck size={18} /></span>
-                        <span className="event-date"><strong>{new Date(`${event.date}T12:00:00`).getDate()}</strong><small>Aug</small></span>
-                        <span>
-                          <strong>{event.title}</strong>
-                          <small>{event.time} · {event.place}</small>
-                          <p>{event.note}</p>
-                        </span>
-                        <ChevronRight size={18} />
-                      </button>
-                    ))}
+                  <div className="overview-route">
+                    <div className="route-stop airport">
+                      <span><Plane size={19} /></span>
+                      <div><small>16 Aug · arrive 18:00</small><strong>Vienna Airport</strong><p>Airport-area overnight after landing.</p></div>
+                    </div>
+                    <div className="route-drive"><CarFront size={14} /><span>About 3h 10m on 17 Aug</span></div>
+                    <div className="route-stop home">
+                      <span><House size={20} /></span>
+                      <div><small>17-24 Aug · first home</small><strong>Hagan Lodges - Lodges Sandling</strong><p>Exact pin: 47.661053, 13.742943</p></div>
+                    </div>
+                    <div className="route-drive"><CarFront size={14} /><span>Via Salzburg on 24 Aug · about 55m + 1h 15m</span></div>
+                    <div className="route-stop home">
+                      <span><House size={20} /></span>
+                      <div><small>24-29 Aug · second home</small><strong>POP-UP LIVING Zell am See</strong><p>Karl-Flieher-Straße 1, 5700 Zell am See</p></div>
+                    </div>
+                    <div className="route-drive"><CarFront size={14} /><span>About 4h 10m on 29 Aug</span></div>
+                    <div className="route-stop airport">
+                      <span><Plane size={19} /></span>
+                      <div><small>30 Aug · depart 10:00</small><strong>Vienna Airport</strong><p>Final airport-area overnight on 29 Aug.</p></div>
+                    </div>
                   </div>
                 </section>
 
@@ -1449,40 +1662,10 @@ export default function TripApp() {
                   </div>
                   <div className="overview-actions">
                     <button onClick={() => navigateTo("today")}><Compass size={18} /><span><strong>Decide a day</strong><small>Weather and current plan</small></span><ChevronRight size={17} /></button>
+                    <button onClick={() => navigateTo("events")}><TicketCheck size={18} /><span><strong>See events</strong><small>Concerts and dated activities</small></span><ChevronRight size={17} /></button>
                     <button onClick={() => navigateTo("explore")}><Search size={18} /><span><strong>Browse attractions</strong><small>Starts with Priority A</small></span><ChevronRight size={17} /></button>
                     <button onClick={() => navigateTo("food")}><Utensils size={18} /><span><strong>Find food</strong><small>Cuisine, price and Google ratings</small></span><ChevronRight size={17} /></button>
                     <button onClick={() => navigateTo("shopping")}><ShoppingBag size={18} /><span><strong>Find shops</strong><small>Groceries and special local stops</small></span><ChevronRight size={17} /></button>
-                  </div>
-                </section>
-
-                <section className="trip-section trip-details-section">
-                  <div className="section-heading compact-heading">
-                    <div>
-                      <span className="eyebrow">Route</span>
-                      <h2>Trip details</h2>
-                    </div>
-                  </div>
-                  <div className="route-line">
-                    <span><Plane size={18} /></span>
-                    <div><strong>Vienna Airport</strong><small>Arrive 16 Aug, 18:00</small></div>
-                  </div>
-                  <div className="route-line">
-                    <span><MountainSnow size={18} /></span>
-                    <div>
-                      <strong>Hagan Lodges - Lodges Sandling</strong>
-                      <small>17-24 Aug · exact pin: 47.661053, 13.742943</small>
-                    </div>
-                  </div>
-                  <div className="route-line">
-                    <span><MapPin size={18} /></span>
-                    <div>
-                      <strong>POP-UP LIVING Zell am See</strong>
-                      <small>24-29 Aug · Karl-Flieher-Straße 1, 5700 Zell am See</small>
-                    </div>
-                  </div>
-                  <div className="route-line">
-                    <span><Plane size={18} /></span>
-                    <div><strong>Vienna Airport</strong><small>Depart 30 Aug, 10:00</small></div>
                   </div>
                 </section>
 
@@ -1533,7 +1716,7 @@ export default function TripApp() {
           );
         })}
         <button
-          className={["itinerary", "food", "shopping"].includes(view) ? "active" : ""}
+          className={["itinerary", "events", "food", "shopping"].includes(view) ? "active" : ""}
           onClick={() => setMobileMenu(true)}
         >
           <Menu size={20} />
@@ -1598,6 +1781,7 @@ export default function TripApp() {
                 <span><strong>17–29 August</strong>{selectedPlace.august_status}</span>
               </div>
               <div className="detail-grid">
+                <span><CarFront size={17} /><small>Approximate drive</small><strong>{approximateDrive(selectedPlace)}</strong></span>
                 {collectionFor(selectedPlace) === "Attractions" ? (
                   <>
                     <span><Gauge size={17} /><small>Visit length</small><strong>{selectedPlace.duration}</strong></span>
