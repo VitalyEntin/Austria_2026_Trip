@@ -1,0 +1,662 @@
+{
+  "place-1": {
+    "src": "./place-images/place-1.jpg",
+    "label": "Area photo",
+    "detail": "Gmunden town view, not the Rathaus",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Gmunden_-_Ortsansicht.JPG/330px-Gmunden_-_Ortsansicht.JPG"
+  },
+  "place-2": {
+    "src": "./place-images/place-2.jpg",
+    "label": "Location photo",
+    "detail": "Schloss Ort",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Gmunden_-_Schloss_Ort_%282%29.JPG/330px-Gmunden_-_Schloss_Ort_%282%29.JPG"
+  },
+  "place-3": {
+    "src": "./place-images/place-3-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.8977752&mlon=13.823134#map=13/47.8977752/13.823134"
+  },
+  "place-4": {
+    "src": "./place-images/place-4.jpg",
+    "label": "Nearby area photo",
+    "detail": "Dachstein mountain, not the Skywalk platform",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Hoher_Dachstein5830.JPG/330px-Hoher_Dachstein5830.JPG"
+  },
+  "place-5": {
+    "src": "./place-images/place-5.jpg",
+    "label": "Location photo",
+    "detail": "5 Fingers",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/5_fingers.jpg/330px-5_fingers.jpg"
+  },
+  "place-6": {
+    "src": "./place-images/place-6-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.519814&mlon=13.7057826#map=13/47.519814/13.7057826"
+  },
+  "place-7": {
+    "src": "./place-images/place-7.jpg",
+    "label": "Location photo",
+    "detail": "Kaiservilla",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Kaiservilla_vorderansicht.jpg/330px-Kaiservilla_vorderansicht.jpg"
+  },
+  "place-8": {
+    "src": "./place-images/place-8-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=48.0163648&mlon=13.7993947#map=13/48.0163648/13.7993947"
+  },
+  "place-9": {
+    "src": "./place-images/place-9.jpg",
+    "label": "Location photo",
+    "detail": "Salzburg Cathedral",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Salzburg_Cathedral_1.jpg/330px-Salzburg_Cathedral_1.jpg"
+  },
+  "place-10": {
+    "src": "./place-images/place-10-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.5620364&mlon=13.6497261#map=13/47.5620364/13.6497261"
+  },
+  "place-11": {
+    "src": "./place-images/place-11-commons.jpg",
+    "label": "Location reference photo",
+    "detail": "Wikimedia Commons name match: St._Wolfgang_im_Salzkammergut_-_Ortsansicht.JPG",
+    "source": "https://commons.wikimedia.org/wiki/File:St._Wolfgang_im_Salzkammergut_-_Ortsansicht.JPG"
+  },
+  "place-12": {
+    "src": "./place-images/place-12-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.7670409&mlon=13.3656431#map=13/47.7670409/13.3656431"
+  },
+  "place-13": {
+    "src": "./place-images/place-13.jpg",
+    "label": "Area photo",
+    "detail": "Zell am See",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Zell_am_See.Wiki.jpeg/330px-Zell_am_See.Wiki.jpeg"
+  },
+  "place-14": {
+    "src": "./place-images/place-14.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.5schaetze.at/en/schafbergbahn.html"
+  },
+  "place-15": {
+    "src": "./place-images/place-15.jpg",
+    "label": "Nearby area photo",
+    "detail": "Hallstatt village, not the Skywalk",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Hallstatt_-_Zentrum_.JPG/330px-Hallstatt_-_Zentrum_.JPG"
+  },
+  "place-16": {
+    "src": "./place-images/place-16.jpg",
+    "label": "Location photo",
+    "detail": "Liechtensteinklamm",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Liechtensteinklamm_14.JPG/330px-Liechtensteinklamm_14.JPG"
+  },
+  "place-17": {
+    "src": "./place-images/place-17-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.169762&mlon=13.1044155#map=13/47.169762/13.1044155"
+  },
+  "place-18": {
+    "src": "./place-images/place-18.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.kitzsteinhorn.at/en/tickets-prices/top-of-salzburg"
+  },
+  "place-19": {
+    "src": "./place-images/place-19-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.5237975&mlon=12.7564102#map=13/47.5237975/12.7564102"
+  },
+  "place-20": {
+    "src": "./place-images/place-20-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.4975&mlon=12.555#map=13/47.4975/12.555"
+  },
+  "place-21": {
+    "src": "./place-images/place-21-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.5201649&mlon=12.704804#map=13/47.5201649/12.704804"
+  },
+  "place-22": {
+    "src": "./place-images/place-22-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.6987528&mlon=13.6071583#map=13/47.6987528/13.6071583"
+  },
+  "place-23": {
+    "src": "./place-images/place-23-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.8065616&mlon=13.9503327#map=13/47.8065616/13.9503327"
+  },
+  "place-24": {
+    "src": "./place-images/place-24-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.1695521&mlon=12.6244085#map=13/47.1695521/12.6244085"
+  },
+  "place-25": {
+    "src": "./place-images/place-25-commons.jpg",
+    "label": "Location reference photo",
+    "detail": "Wikimedia Commons name match: Vorderer_Gosausee.png",
+    "source": "https://commons.wikimedia.org/wiki/File:Vorderer_Gosausee.png"
+  },
+  "place-26": {
+    "src": "./place-images/place-26-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.7425173&mlon=13.3514662#map=13/47.7425173/13.3514662"
+  },
+  "place-27": {
+    "src": "./place-images/place-27-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.7851858&mlon=13.5555362#map=13/47.7851858/13.5555362"
+  },
+  "place-28": {
+    "src": "./place-images/place-28-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.746128&mlon=13.9592427#map=13/47.746128/13.9592427"
+  },
+  "place-29": {
+    "src": "./place-images/place-29-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.9048664&mlon=13.5665113#map=13/47.9048664/13.5665113"
+  },
+  "place-30": {
+    "src": "./place-images/place-30-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.9121648&mlon=13.5334877#map=13/47.9121648/13.5334877"
+  },
+  "place-31": {
+    "src": "./place-images/place-31-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.8676619&mlon=13.8146874#map=13/47.8676619/13.8146874"
+  },
+  "place-32": {
+    "src": "./place-images/place-32-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.3287941&mlon=12.7385429#map=13/47.3287941/12.7385429"
+  },
+  "place-33": {
+    "src": "./place-images/place-33-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.4137921&mlon=12.4540015#map=13/47.4137921/12.4540015"
+  },
+  "place-34": {
+    "src": "./place-images/place-34.jpg",
+    "label": "Nearby area photo",
+    "detail": "Saalbach-Hinterglemm area, not the attraction",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Saalbach_hinterglemm_above.JPG/330px-Saalbach_hinterglemm_above.JPG"
+  },
+  "place-35": {
+    "src": "./place-images/place-35-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.638&mlon=13.765#map=13/47.638/13.765"
+  },
+  "place-36": {
+    "src": "./place-images/place-36.jpg",
+    "label": "Area photo",
+    "detail": "Regional context, not the exact venue",
+    "source": "https://www.zellamsee-kaprun.com/en/experience/summer-card"
+  },
+  "place-37": {
+    "src": "./place-images/place-37-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=48.1197&mlon=16.5636#map=13/48.1197/16.5636"
+  },
+  "place-38": {
+    "src": "./place-images/place-38-commons.jpg",
+    "label": "Location reference photo",
+    "detail": "Wikimedia Commons name match: Aerial_image_of_the_Altausseer_See_(view_from_the_west).jpg",
+    "source": "https://commons.wikimedia.org/wiki/File:Aerial_image_of_the_Altausseer_See_(view_from_the_west).jpg"
+  },
+  "place-39": {
+    "src": "./place-images/place-39-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.6655&mlon=13.7589#map=13/47.6655/13.7589"
+  },
+  "place-40": {
+    "src": "./place-images/place-40-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.6616&mlon=13.7509#map=13/47.6616/13.7509"
+  },
+  "place-41": {
+    "src": "./place-images/place-41.jpg",
+    "label": "Location photo",
+    "detail": "Hallstatt village",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Hallstatt_-_Zentrum_.JPG/330px-Hallstatt_-_Zentrum_.JPG"
+  },
+  "place-42": {
+    "src": "./place-images/place-42-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.3253&mlon=12.7607#map=13/47.3253/12.7607"
+  },
+  "place-43": {
+    "src": "./place-images/place-43.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.klamm-kaprun.at/en/"
+  },
+  "place-44": {
+    "src": "./place-images/place-44-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.2738&mlon=12.7599#map=13/47.2738/12.7599"
+  },
+  "place-45": {
+    "src": "./place-images/place-45-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.6267&mlon=13.8298#map=13/47.6267/13.8298"
+  },
+  "place-46": {
+    "src": "./place-images/place-46-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.6416&mlon=13.9323#map=13/47.6416/13.9323"
+  },
+  "place-47": {
+    "src": "./place-images/place-47-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.7078&mlon=13.6266#map=13/47.7078/13.6266"
+  },
+  "place-48": {
+    "src": "./place-images/place-48-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.6909&mlon=13.6922#map=13/47.6909/13.6922"
+  },
+  "place-49": {
+    "src": "./place-images/place-49-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.7521&mlon=13.8469#map=13/47.7521/13.8469"
+  },
+  "place-50": {
+    "src": "./place-images/place-50-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.8202&mlon=13.6842#map=13/47.8202/13.6842"
+  },
+  "place-51": {
+    "src": "./place-images/place-51-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.5578&mlon=13.6828#map=13/47.5578/13.6828"
+  },
+  "place-52": {
+    "src": "./place-images/place-52-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.4313&mlon=12.8425#map=13/47.4313/12.8425"
+  },
+  "place-53": {
+    "src": "./place-images/place-53-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.4523&mlon=12.8302#map=13/47.4523/12.8302"
+  },
+  "place-54": {
+    "src": "./place-images/place-54-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.3254&mlon=12.799#map=13/47.3254/12.799"
+  },
+  "place-55": {
+    "src": "./place-images/place-55-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.3229&mlon=12.7998#map=13/47.3229/12.7998"
+  },
+  "place-56": {
+    "src": "./place-images/place-56.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.wildpark-ferleiten.at/"
+  },
+  "place-57": {
+    "src": "./place-images/place-57-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.6055&mlon=13.8002#map=13/47.6055/13.8002"
+  },
+  "place-58": {
+    "src": "./place-images/place-58.jpg",
+    "label": "Official brand image",
+    "detail": "Brand image, not a photograph of the venue",
+    "source": "https://www.hausdernatur.at/en/"
+  },
+  "place-59": {
+    "src": "./place-images/place-59.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.tauernspakaprun.com/en"
+  },
+  "place-60": {
+    "src": "./place-images/place-60-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.324&mlon=12.7964#map=13/47.324/12.7964"
+  },
+  "place-61": {
+    "src": "./place-images/place-61-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.8056&mlon=13.0418#map=13/47.8056/13.0418"
+  },
+  "place-62": {
+    "src": "./place-images/place-62-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.7952&mlon=13.0477#map=13/47.7952/13.0477"
+  },
+  "place-63": {
+    "src": "./place-images/place-63.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.hellbrunn.at/en/"
+  },
+  "place-64": {
+    "src": "./place-images/place-64.jpg",
+    "label": "Location photo",
+    "detail": "Grossglockner High Alpine Road",
+    "source": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Grossglockner_road.jpg/330px-Grossglockner_road.jpg"
+  },
+  "place-65": {
+    "src": "./place-images/place-65-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.198&mlon=12.723#map=13/47.198/12.723"
+  },
+  "place-66": {
+    "src": "./place-images/place-66-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.2821&mlon=12.4816#map=13/47.2821/12.4816"
+  },
+  "place-67": {
+    "src": "./place-images/place-67-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.2144&mlon=12.1708#map=13/47.2144/12.1708"
+  },
+  "place-68": {
+    "src": "./place-images/place-68.jpg",
+    "label": "Official brand image",
+    "detail": "Brand image, not a photograph of the venue",
+    "source": "https://www.blaa-alm.at/start/"
+  },
+  "place-69": {
+    "src": "./place-images/place-69.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.alpenstubn.at/en"
+  },
+  "place-70": {
+    "src": "./place-images/place-70.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.wirtschaft-altaussee.com/"
+  },
+  "place-71": {
+    "src": "./place-images/place-71.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.jagdhaus-seewiese.com/"
+  },
+  "place-72": {
+    "src": "./place-images/place-72.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.steiermark.com/de/Ausseerland-Salzkammergut/Urlaub-planen/Ausflugsziele/Gasthaus-Wiesn_isd_3421551"
+  },
+  "place-73": {
+    "src": "./place-images/place-73-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.7047761&mlon=13.6179899#map=13/47.7047761/13.6179899"
+  },
+  "place-74": {
+    "src": "./place-images/place-74.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://zauner.at/"
+  },
+  "place-75": {
+    "src": "./place-images/place-75-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.7136526&mlon=13.6187508#map=13/47.7136526/13.6187508"
+  },
+  "place-76": {
+    "src": "./place-images/place-76-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.5642465&mlon=13.7219714#map=13/47.5642465/13.7219714"
+  },
+  "place-77": {
+    "src": "./place-images/place-77.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.obertraun.net/restaurants-en-us-2/seecafe-in-obertraun-am-hallstaettersee-en-us/"
+  },
+  "place-78": {
+    "src": "./place-images/place-78.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://wiesenhof-abersee.com/"
+  },
+  "place-79": {
+    "src": "./place-images/place-79-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.7405447&mlon=13.4440142#map=13/47.7405447/13.4440142"
+  },
+  "place-80": {
+    "src": "./place-images/place-80.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.engelhof.at/"
+  },
+  "place-81": {
+    "src": "./place-images/place-81-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.80501&mlon=13.0364472#map=13/47.80501/13.0364472"
+  },
+  "place-82": {
+    "src": "./place-images/place-82-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.805414&mlon=13.0338412#map=13/47.805414/13.0338412"
+  },
+  "place-83": {
+    "src": "./place-images/place-83.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.dieweisse.at/en/"
+  },
+  "place-84": {
+    "src": "./place-images/place-84.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.steinerwirt.com/"
+  },
+  "place-85": {
+    "src": "./place-images/place-85-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.3208263&mlon=12.7952871#map=13/47.3208263/12.7952871"
+  },
+  "place-86": {
+    "src": "./place-images/place-86-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.3309202&mlon=12.7767968#map=13/47.3309202/12.7767968"
+  },
+  "place-87": {
+    "src": "./place-images/place-87-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.2682141&mlon=12.753125#map=13/47.2682141/12.753125"
+  },
+  "place-88": {
+    "src": "./place-images/place-88-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.2730831&mlon=12.7635524#map=13/47.2730831/12.7635524"
+  },
+  "place-89": {
+    "src": "./place-images/place-89-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.4252406&mlon=12.8503495#map=13/47.4252406/12.8503495"
+  },
+  "place-90": {
+    "src": "./place-images/place-90.jpg",
+    "label": "Area photo",
+    "detail": "Regional context, not the exact venue",
+    "source": "https://www.lofer.com/de"
+  },
+  "place-91": {
+    "src": "./place-images/place-91.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.lukashansl.at/en/"
+  },
+  "place-92": {
+    "src": "./place-images/place-92.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.zellamsee-kaprun.com/en/poi/sonnkogel-mountain-restaurant~2332"
+  },
+  "place-93": {
+    "src": "./place-images/place-93.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.zellamsee-kaprun.com/en/poi/mountain-restaurant-mooserboden~1552"
+  },
+  "place-94": {
+    "src": "./place-images/place-94.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.steiermark.com/de/Ausseerland-Salzkammergut/Urlaub-planen/Ausflugsziele/Spar-Markt-Altaussee_isd_3421184"
+  },
+  "place-95": {
+    "src": "./place-images/place-95-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.6074066&mlon=13.7756825#map=13/47.6074066/13.7756825"
+  },
+  "place-96": {
+    "src": "./place-images/place-96.jpg",
+    "label": "Official brand image",
+    "detail": "Brand image, not a photograph of the venue",
+    "source": "https://www.lebkuchen.at/"
+  },
+  "place-97": {
+    "src": "./place-images/place-97-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.690645&mlon=13.6227992#map=13/47.690645/13.6227992"
+  },
+  "place-98": {
+    "src": "./place-images/place-98.jpg",
+    "label": "Official brand image",
+    "detail": "Brand image, not a photograph of the venue",
+    "source": "https://gmundner.com/manufaktur/oeffnungszeiten-shops"
+  },
+  "place-99": {
+    "src": "./place-images/place-99-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.8156109&mlon=13.0070754#map=13/47.8156109/13.0070754"
+  },
+  "place-100": {
+    "src": "./place-images/place-100.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.salzburg.info/en/dining-shopping/traditional-businesses/book-store-hoellrigl"
+  },
+  "place-101": {
+    "src": "./place-images/place-101-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.7991204&mlon=13.0455572#map=13/47.7991204/13.0455572"
+  },
+  "place-102": {
+    "src": "./place-images/place-102.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.zellamsee-kaprun.com/en/poi/billa-plus~1562"
+  },
+  "place-103": {
+    "src": "./place-images/place-103.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.zellamsee-kaprun.com/en/poi/hofer-schuttdorf~1902"
+  },
+  "place-104": {
+    "src": "./place-images/place-104.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.zellamsee-kaprun.com/en/poi/billa-kaprun~1561"
+  },
+  "place-105": {
+    "src": "./place-images/place-105.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.zellamsee-kaprun.com/de/poi/feinkost-schmiderer~1785"
+  },
+  "place-106": {
+    "src": "./place-images/place-106.jpg",
+    "label": "Official photo",
+    "detail": "From the place's official website",
+    "source": "https://www.augut.at/hofladen/"
+  },
+  "place-107": {
+    "src": "./place-images/place-107-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.2987845&mlon=12.7950738#map=13/47.2987845/12.7950738"
+  },
+  "place-108": {
+    "src": "./place-images/place-108-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=47.4304733&mlon=12.8426957#map=13/47.4304733/12.8426957"
+  },
+  "place-109": {
+    "src": "./place-images/place-109-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=48.1172092&mlon=16.3180876#map=13/48.1172092/16.3180876"
+  },
+  "place-110": {
+    "src": "./place-images/place-110-map.jpg",
+    "label": "Map location - not a photo",
+    "detail": "No verified place photo was found; the marker shows the saved pin",
+    "source": "https://www.openstreetmap.org/?mlat=48.1206&mlon=16.5608#map=13/48.1206/16.5608"
+  }
+}

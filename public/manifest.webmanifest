@@ -1,0 +1,9 @@
+{
+  "name": "Austria 2026 Family Trip",
+  "short_name": "Austria 2026",
+  "description": "Weather-aware family trip planner for Austria.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#edf2ef",
+  "theme_color": "#174f42"
+}
