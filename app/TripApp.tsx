@@ -86,6 +86,7 @@ type DayPlan = {
   base: string;
   people: string;
   plan: string;
+  secondPlan?: string;
   backup: string;
   note: string;
 };
@@ -186,8 +187,9 @@ const defaultItinerary: DayPlan[] = [
     base: "Altaussee",
     people: "Everyone together",
     plan: "Dachstein Giant Ice Cave",
-    backup: "5 Fingers",
-    note: "Start with the Ice Cave. Add 5 Fingers only if visibility and everyone's energy are still good. Bring warm layers and the carrier.",
+    secondPlan: "5 Fingers",
+    backup: "Hallstatt village",
+    note: "Start with the Ice Cave. Continue to 5 Fingers only if visibility and everyone's energy are still good. Bring warm layers and the carrier.",
   },
   {
     date: "2026-08-20",
@@ -304,7 +306,7 @@ const events: EventItem[] = [
     time: "19:00",
     title: "Ausseer Baroque Days",
     place: "Altaussee event hall",
-    note: "Baroque Alpine sounds. Very close to the first base.",
+    note: "Baroque Alpine sounds. Very close to Hagan Lodges.",
     kind: "music",
   },
   {
@@ -369,6 +371,18 @@ function baseForPlace(place: Place) {
   return "Altaussee";
 }
 
+function placeFitsDay(place: Place, day: DayPlan) {
+  const area = place.base.toLowerCase();
+  if (day.date === "2026-08-16" || day.date === "2026-08-29" || day.date === "2026-08-30") {
+    return /arrival|return|departure/.test(area);
+  }
+  if (day.date === "2026-08-17") return /first|arrival|transfer/.test(area);
+  if (day.date === "2026-08-24") return /transfer|salzburg/.test(area);
+  if (day.base === "Altaussee") return /first|either/.test(area);
+  if (day.base === "Zell am See") return /second|either/.test(area);
+  return true;
+}
+
 function distanceKm(
   from: { lat: number; lon: number },
   to: { lat: number; lon: number },
@@ -385,6 +399,55 @@ function distanceKm(
   return earthRadius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+function driveMinutesBetween(first: Place, second: Place) {
+  const directDistance = distanceKm(first, second);
+  const estimatedRoadKm = directDistance * 1.38 + 2;
+  const averageSpeed = estimatedRoadKm < 12 ? 34 : estimatedRoadKm < 50 ? 47 : 58;
+  return Math.max(5, Math.round(((estimatedRoadKm / averageSpeed) * 60) / 5) * 5);
+}
+
+function upperDurationHours(place?: Place) {
+  if (!place) return 0;
+  const value = place.duration.toLowerCase();
+  if (value.includes("full day")) return 7;
+  if (value.includes("half day")) return 4;
+  const hourRange = value.match(/(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)\s*(?:h|hour)/);
+  if (hourRange) return Number(hourRange[2]);
+  const singleHours = value.match(/(\d+(?:\.\d+)?)\s*(?:h|hour)/);
+  if (singleHours) return Number(singleHours[1]);
+  const minuteRange = value.match(/(\d+)\s*[-–]\s*(\d+)\s*min/);
+  if (minuteRange) return Number(minuteRange[2]) / 60;
+  const singleMinutes = value.match(/(\d+)\s*min/);
+  if (singleMinutes) return Number(singleMinutes[1]) / 60;
+  return 3;
+}
+
+function dayEffort(day: DayPlan) {
+  const first = placeByName.get(day.plan);
+  const second = day.secondPlan ? placeByName.get(day.secondPlan) : undefined;
+  if (!first || !second) return null;
+  if (first.id === second.id) {
+    return {
+      tough: true,
+      title: "Choose two different outings",
+      detail: "The same place is selected twice.",
+    };
+  }
+  const activityHours = upperDurationHours(first) + upperDurationHours(second);
+  const betweenMinutes = driveMinutesBetween(first, second);
+  const tough =
+    upperDurationHours(first) >= 6 ||
+    upperDurationHours(second) >= 6 ||
+    activityHours > 7 ||
+    betweenMinutes > 60 ||
+    (activityHours > 6 && betweenMinutes > 30);
+  return {
+    tough,
+    title: tough ? "This may be too much for one day" : "These two outings fit",
+    detail: `Allow up to ${Math.round(activityHours * 2) / 2} hours for activities, plus about ${betweenMinutes} minutes between them.`,
+  };
+}
+
 function approximateDrive(place: Place, baseName = baseForPlace(place)) {
   if (isHomePlace(place)) return "Home";
   const base = baseCoordinates[baseName] ?? baseCoordinates.Altaussee;
@@ -393,26 +456,29 @@ function approximateDrive(place: Place, baseName = baseForPlace(place)) {
   const averageSpeed =
     estimatedRoadKm < 12 ? 34 : estimatedRoadKm < 50 ? 47 : estimatedRoadKm < 120 ? 58 : 76;
   const minutes = Math.max(5, Math.round((estimatedRoadKm / averageSpeed) * 12) * 5);
-  const source = base.label;
   if (minutes >= 120) {
     const hours = Math.floor(minutes / 60);
     const remainder = minutes % 60;
-    return `~${hours}h${remainder ? ` ${remainder}m` : ""} from ${source}`;
+    return `~${hours}h${remainder ? ` ${remainder}m` : ""} drive`;
   }
-  if (minutes >= 60) return `~1h ${minutes - 60}m from ${source}`;
-  return `~${minutes} min from ${source}`;
+  if (minutes >= 60) return `~1h ${minutes - 60}m drive`;
+  return `~${minutes} min drive`;
 }
 
-function itineraryDrive(day: DayPlan, place?: Place) {
+function itineraryDrive(day: DayPlan, place?: Place, secondPlace?: Place) {
   if (day.date === "2026-08-16") return "~5 min from the airport to the overnight area";
   if (day.date === "2026-08-17") return "~3h 10m total toward Hagan Lodges, plus stops";
   if (day.date === "2026-08-24") return "~55m to Salzburg, then ~1h 15m to POP-UP LIVING";
   if (day.date === "2026-08-29") return "~4h 10m from POP-UP LIVING to Vienna Airport";
   if (day.date === "2026-08-30") return "~5 min from the airport hotel to the terminal";
-  return place ? approximateDrive(place, day.base) : "";
+  if (!place) return "";
+  const firstDrive = approximateDrive(place, day.base);
+  return secondPlace
+    ? `${firstDrive} · then ~${driveMinutesBetween(place, secondPlace)} min between outings`
+    : firstDrive;
 }
 
-function itineraryStory(day: DayPlan, place?: Place) {
+function itineraryStory(day: DayPlan, place?: Place, secondPlace?: Place) {
   if (day.date === "2026-08-16") {
     return "Land at Vienna Airport at 18:00, collect the rental car and make only the short drive to the airport-area hotel. Dinner and sleep are the plan.";
   }
@@ -429,9 +495,12 @@ function itineraryStory(day: DayPlan, place?: Place) {
     return "Make the short airport transfer early, return the car if needed and aim to be inside the terminal around 07:00-07:30 for the 10:00 flight.";
   }
   if (!place) {
-    return "This day has no main outing yet. Choose one attraction and keep the rest of the day flexible.";
+    return "This day has no outing yet. Choose one or two attractions and keep the rest of the day flexible.";
   }
-  return `Start at ${baseCoordinates[day.base]?.label || day.base}, then drive to ${place.name}. The estimated drive is ${approximateDrive(place, day.base).replace(" from", " each way from")}. Allow ${place.duration.toLowerCase()} for the visit. ${place.notes}`;
+  const secondStop = secondPlace
+    ? ` Afterward, continue about ${driveMinutesBetween(place, secondPlace)} minutes to ${secondPlace.name} and allow ${secondPlace.duration.toLowerCase()} there.`
+    : "";
+  return `Start with ${place.name}, about ${approximateDrive(place, day.base)} away. Allow ${place.duration.toLowerCase()} for the visit.${secondStop} ${place.notes}`;
 }
 
 function isoToday() {
@@ -685,15 +754,21 @@ export default function TripApp() {
   useEffect(() => {
     if (!itineraryReady) return;
     const dachsteinDay = itinerary.find((day) => day.date === "2026-08-19");
-    if (dachsteinDay?.plan !== "5 Fingers") return;
+    const hasOldMain = dachsteinDay?.plan === "5 Fingers";
+    const hasOldBackup =
+      dachsteinDay?.plan === "Dachstein Giant Ice Cave" &&
+      !dachsteinDay.secondPlan &&
+      dachsteinDay.backup === "5 Fingers";
+    if (!hasOldMain && !hasOldBackup) return;
     setItinerary((days) =>
       days.map((day) =>
         day.date === "2026-08-19"
           ? {
               ...day,
               plan: "Dachstein Giant Ice Cave",
-              backup: "5 Fingers",
-              note: "Start with the Ice Cave. Add 5 Fingers only if visibility and everyone's energy are still good. Bring warm layers and the carrier.",
+              secondPlan: "5 Fingers",
+              backup: "Hallstatt village",
+              note: "Start with the Ice Cave. Continue to 5 Fingers only if visibility and everyone's energy are still good. Bring warm layers and the carrier.",
             }
           : day,
       ),
@@ -746,6 +821,7 @@ export default function TripApp() {
 
   const recommendations = useMemo(() => {
     const currentPlan = selectedDay?.plan ? placeByName.get(selectedDay.plan) : undefined;
+    const secondPlan = selectedDay?.secondPlan ? placeByName.get(selectedDay.secondPlan) : undefined;
     const backup = selectedDay?.backup ? placeByName.get(selectedDay.backup) : undefined;
     const baseToken =
       selectedDay?.base === "Altaussee"
@@ -772,7 +848,7 @@ export default function TripApp() {
       })
       .sort((a, b) => b.score - a.score)
       .map((entry) => entry.place);
-    const picks = [currentPlan, backup, ...scored].filter(Boolean) as Place[];
+    const picks = [currentPlan, secondPlan, backup, ...scored].filter(Boolean) as Place[];
     return [...new Map(picks.map((place) => [place.name, place])).values()].slice(0, 3);
   }, [forecast, selectedDay, visited]);
 
@@ -812,7 +888,8 @@ export default function TripApp() {
     () =>
       new Set(
         itinerary
-          .map((day) => placeByName.get(day.plan)?.id)
+          .flatMap((day) => [day.plan, day.secondPlan])
+          .map((name) => (name ? placeByName.get(name)?.id : undefined))
           .filter((id): id is string => Boolean(id)),
       ),
     [itinerary],
@@ -821,11 +898,13 @@ export default function TripApp() {
   const itineraryDatesByPlaceId = useMemo(() => {
     const datesByPlace = new Map<string, string[]>();
     itinerary.forEach((day) => {
-      const placeId = placeByName.get(day.plan)?.id;
-      if (!placeId) return;
-      const dates = datesByPlace.get(placeId) ?? [];
-      dates.push(shortDate(day.date));
-      datesByPlace.set(placeId, dates);
+      [day.plan, day.secondPlan].forEach((name) => {
+        const placeId = name ? placeByName.get(name)?.id : undefined;
+        if (!placeId) return;
+        const dates = datesByPlace.get(placeId) ?? [];
+        dates.push(shortDate(day.date));
+        datesByPlace.set(placeId, dates);
+      });
     });
     return datesByPlace;
   }, [itinerary]);
@@ -859,9 +938,23 @@ export default function TripApp() {
 
   const eventsToday = events.filter((event) => event.date === selectedDate);
   const selectedPlanPlace = selectedDay?.plan ? placeByName.get(selectedDay.plan) : undefined;
+  const selectedSecondPlace = selectedDay?.secondPlan
+    ? placeByName.get(selectedDay.secondPlan)
+    : undefined;
   const selectedDayEvents = events.filter((event) => event.date === selectedDate);
-  const selectedDrive = selectedDay ? itineraryDrive(selectedDay, selectedPlanPlace) : "";
+  const selectedDrive = selectedDay
+    ? itineraryDrive(selectedDay, selectedPlanPlace, selectedSecondPlace)
+    : "";
+  const selectedEffort = selectedDay ? dayEffort(selectedDay) : null;
   const editingDay = editingDate ? itinerary.find((day) => day.date === editingDate) : undefined;
+  const editingDayPlaces = editingDay
+    ? attractionPlaces.filter((place) => placeFitsDay(place, editingDay))
+    : [];
+  const selectedPlaceFitsSelectedDay =
+    !selectedPlace ||
+    collectionFor(selectedPlace) !== "Attractions" ||
+    !selectedDay ||
+    placeFitsDay(selectedPlace, selectedDay);
 
   function stepDay(direction: number) {
     const next = Math.min(Math.max(dayIndex + direction, 0), itinerary.length - 1);
@@ -870,6 +963,25 @@ export default function TripApp() {
 
   function updateDay(date: string, patch: Partial<DayPlan>) {
     setItinerary((days) => days.map((day) => (day.date === date ? { ...day, ...patch } : day)));
+  }
+
+  function chooseDayPlace(date: string, slot: "plan" | "secondPlan", name: string) {
+    setItinerary((days) =>
+      days.map((day) => {
+        if (day.date !== date) return day;
+        if (slot === "plan") {
+          return {
+            ...day,
+            plan: name,
+            secondPlan: day.secondPlan === name ? "" : day.secondPlan,
+          };
+        }
+        return {
+          ...day,
+          secondPlan: name === day.plan ? "" : name,
+        };
+      }),
+    );
   }
 
   function resetPersonalPlan() {
@@ -1068,9 +1180,9 @@ export default function TripApp() {
 
               <div className="section-heading">
                 <div>
-                  <span className="eyebrow">One main outing</span>
-                  <h2>Current plan and alternatives</h2>
-                  <p className="section-note">The selected card is the day plan. The other cards are backups, not extra required stops.</p>
+                  <span className="eyebrow">One or two outings</span>
+                  <h2>Today&apos;s plan and alternatives</h2>
+                  <p className="section-note">Choose a first outing and, when the day allows it, an optional second stop.</p>
                 </div>
                 <span className="quiet-label">{forecast ? "Weather ranked" : "Itinerary ranked"}</span>
               </div>
@@ -1078,13 +1190,31 @@ export default function TripApp() {
               <div className="recommendation-grid">
                 {recommendations.map((place, index) => {
                   const isCurrentPlan = selectedDay?.plan === place.name;
+                  const isSecondPlan = selectedDay?.secondPlan === place.name;
                   return (
-                    <article className={isCurrentPlan ? "recommendation-card current-plan" : "recommendation-card"} key={place.id}>
+                    <article
+                      className={
+                        isCurrentPlan
+                          ? "recommendation-card current-plan"
+                          : isSecondPlan
+                            ? "recommendation-card second-plan"
+                            : "recommendation-card"
+                      }
+                      key={place.id}
+                    >
                       <button className="card-click" onClick={() => openPlace(place)} aria-label={`View ${place.name}`}>
                         <div className="card-media">
                           <PlacePhoto key={place.id} place={place} />
                           <span className="rank-chip">
-                            {isCurrentPlan ? "Current plan" : index === 0 ? "Best match" : index === 1 ? "Easier option" : "Alternative"}
+                            {isCurrentPlan
+                              ? "First outing"
+                              : isSecondPlan
+                                ? "Second outing"
+                                : index === 0
+                                  ? "Best match"
+                                  : index === 1
+                                    ? "Easier option"
+                                    : "Alternative"}
                           </span>
                         </div>
                         <div className="card-body">
@@ -1107,11 +1237,19 @@ export default function TripApp() {
                       <div className="card-actions">
                         <button
                           className="primary-button compact"
-                          onClick={() => updateDay(selectedDate, { plan: place.name })}
+                          onClick={() => chooseDayPlace(selectedDate, "plan", place.name)}
                           disabled={isCurrentPlan}
                         >
                           <Check size={16} />
-                          {isCurrentPlan ? "Selected" : "Choose as main"}
+                          {isCurrentPlan ? "First outing" : "Choose first"}
+                        </button>
+                        <button
+                          className="secondary-button compact"
+                          onClick={() => chooseDayPlace(selectedDate, "secondPlan", place.name)}
+                          disabled={isSecondPlan || isCurrentPlan}
+                        >
+                          <Plus size={16} />
+                          {isSecondPlan ? "Second outing" : "Add second"}
                         </button>
                         <a
                           className="icon-button"
@@ -1128,6 +1266,16 @@ export default function TripApp() {
                   );
                 })}
               </div>
+
+              {selectedEffort && (
+                <div className={`schedule-assessment ${selectedEffort.tough ? "warn" : "good"}`}>
+                  {selectedEffort.tough ? <CircleAlert size={19} /> : <Check size={19} />}
+                  <span>
+                    <strong>{selectedEffort.title}</strong>
+                    <small>{selectedEffort.detail}</small>
+                  </span>
+                </div>
+              )}
 
               <div className="today-lower-grid">
                 <section className="plain-section">
@@ -1160,7 +1308,7 @@ export default function TripApp() {
                   <div className="trip-stats">
                     <span><strong>{visited.length}</strong><small>places visited</small></span>
                     <span><strong>{events.filter((event) => event.date >= selectedDate).length}</strong><small>events ahead</small></span>
-                    <span><strong>{itinerary.filter((day) => day.plan).length}</strong><small>days with a main plan</small></span>
+                    <span><strong>{itinerary.filter((day) => day.plan).length}</strong><small>days with a plan</small></span>
                   </div>
                 </section>
               </div>
@@ -1209,7 +1357,7 @@ export default function TripApp() {
                 <div>
                   <span className="eyebrow">16–30 August</span>
                   <h1>Itinerary</h1>
-                  <p>{itinerary.filter((day) => day.plan).length} days with one main outing · changes stay on this device</p>
+                  <p>{itinerary.filter((day) => day.plan).length} planned days · add a second outing when the timing works</p>
                 </div>
                 <button className="secondary-button" onClick={() => setEditingDate(selectedDate)}>
                   <Plus size={17} />
@@ -1220,7 +1368,9 @@ export default function TripApp() {
                 <div className="itinerary-list">
                   {itinerary.map((day) => {
                     const plan = placeByName.get(day.plan);
-                    const dayDrive = itineraryDrive(day, plan);
+                    const secondPlan = day.secondPlan ? placeByName.get(day.secondPlan) : undefined;
+                    const dayDrive = itineraryDrive(day, plan, secondPlan);
+                    const effort = dayEffort(day);
                     const dayEvents = events.filter((event) => event.date === day.date);
                     const active = day.date === selectedDate;
                     return (
@@ -1247,13 +1397,30 @@ export default function TripApp() {
                               if (plan) openPlace(plan);
                             }}
                           >
-                            {plan ? `Main: ${plan.name}` : "No main outing planned"}
+                            {plan ? `First: ${plan.name}` : "No outing planned"}
                             {plan && <ChevronRight size={16} />}
                           </button>
+                          {secondPlan && (
+                            <button
+                              className="day-plan-link second"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                openPlace(secondPlan);
+                              }}
+                            >
+                              Second: {secondPlan.name}
+                              <ChevronRight size={16} />
+                            </button>
+                          )}
                           {dayDrive && <small><CarFront size={12} /> {dayDrive}</small>}
+                          {effort?.tough && (
+                            <small className="day-effort-warning">
+                              <CircleAlert size={13} /> {effort.title}
+                            </small>
+                          )}
                           {day.backup && <small>Weather backup: {day.backup}</small>}
                           {day.note && <p>{day.note}</p>}
-                          {active && <p className="mobile-day-story">{itineraryStory(day, plan)}</p>}
+                          {active && <p className="mobile-day-story">{itineraryStory(day, plan, secondPlan)}</p>}
                           {dayEvents.map((event) => (
                             <span className="event-pill" key={event.title}>
                               <TicketCheck size={13} /> {event.time} · {event.title}
@@ -1280,17 +1447,25 @@ export default function TripApp() {
                   <h3>{selectedDay?.label}</h3>
                   {selectedDay ? (
                     <>
-                      <p className="day-story">{itineraryStory(selectedDay, selectedPlanPlace)}</p>
+                      <p className="day-story">{itineraryStory(selectedDay, selectedPlanPlace, selectedSecondPlace)}</p>
                       {selectedPlanPlace && (
                         <div className="day-story-facts">
                           <span><CarFront size={15} /><strong>{selectedDrive}</strong><small>Approximate driving</small></span>
-                          <span><Gauge size={15} /><strong>{selectedPlanPlace.duration}</strong><small>Visit length</small></span>
+                          <span>
+                            <Gauge size={15} />
+                            <strong>
+                              {selectedSecondPlace
+                                ? `${selectedPlanPlace.duration} + ${selectedSecondPlace.duration}`
+                                : selectedPlanPlace.duration}
+                            </strong>
+                            <small>Visit length</small>
+                          </span>
                           <span><CloudSun size={15} /><strong>{selectedPlanPlace.weather}</strong><small>Best conditions</small></span>
                         </div>
                       )}
                     </>
                   ) : (
-                    <p className="day-story">This day has no main outing yet. Choose one attraction and keep the rest of the day flexible.</p>
+                    <p className="day-story">This day has no outing yet. Choose one or two attractions and keep the rest of the day flexible.</p>
                   )}
                   {selectedDay?.note && <p>{selectedDay.note}</p>}
                   {selectedPlanPlace && (
@@ -1298,10 +1473,29 @@ export default function TripApp() {
                       <MapPin size={18} />
                       <span>
                         <strong>{selectedPlanPlace.name}</strong>
-                        <small>Open full place details</small>
+                        <small>First outing · open full details</small>
                       </span>
                       <ChevronRight size={17} />
                     </button>
+                  )}
+                  {selectedSecondPlace && (
+                    <button className="mini-place second" onClick={() => openPlace(selectedSecondPlace)}>
+                      <Plus size={18} />
+                      <span>
+                        <strong>{selectedSecondPlace.name}</strong>
+                        <small>Second outing · open full details</small>
+                      </span>
+                      <ChevronRight size={17} />
+                    </button>
+                  )}
+                  {selectedEffort && (
+                    <div className={`schedule-assessment ${selectedEffort.tough ? "warn" : "good"}`}>
+                      {selectedEffort.tough ? <CircleAlert size={18} /> : <Check size={18} />}
+                      <span>
+                        <strong>{selectedEffort.title}</strong>
+                        <small>{selectedEffort.detail}</small>
+                      </span>
+                    </div>
                   )}
                   {selectedDay?.backup && (
                     <div className="day-backup">
@@ -1365,15 +1559,17 @@ export default function TripApp() {
                     }
                   />
                 </label>
-                <label>
-                  <span className="sr-only">Base</span>
-                  <select value={baseFilter} onChange={(e) => setBaseFilter(e.target.value)}>
-                    <option>All</option>
-                    <option>First base</option>
-                    <option>Second base</option>
-                    <option>Transfer</option>
-                  </select>
-                </label>
+                {collectionFilter !== "Attractions" && (
+                  <label>
+                    <span className="sr-only">Area</span>
+                    <select value={baseFilter} onChange={(e) => setBaseFilter(e.target.value)}>
+                      <option value="All">All areas</option>
+                      <option value="First base">Altaussee area</option>
+                      <option value="Second base">Zell area</option>
+                      <option value="Transfer">Transfer route</option>
+                    </select>
+                  </label>
+                )}
                 {collectionFilter === "Attractions" ? (
                   <>
                     <label>
@@ -1431,7 +1627,7 @@ export default function TripApp() {
               </div>
               <div className={`place-table-head ${collectionFilter.toLowerCase()}-columns`}>
                 <span>{collectionFilter === "Food" ? "Restaurant" : collectionFilter === "Shopping" ? "Shop" : "Place"}</span>
-                <span>{collectionFilter === "Attractions" ? "Best base" : "Area"}</span>
+                <span>{collectionFilter === "Attractions" ? "Location" : "Area"}</span>
                 <span>{collectionFilter === "Attractions" ? "Visit / drive" : "Type"}</span>
                 <span>{collectionFilter === "Attractions" ? "Weather" : collectionFilter === "Food" ? "Price" : "Best use"}</span>
                 <span>{collectionFilter === "Attractions" ? "Status" : collectionFilter === "Food" ? "Google rating" : "Priority"}</span>
@@ -1471,7 +1667,7 @@ export default function TripApp() {
                       </span>
                     </span>
                     <span className="area-cell">
-                      {collectionFilter === "Attractions" ? place.base : place.location}
+                      {place.location}
                       {collectionFilter !== "Attractions" && <small><CarFront size={11} /> {approximateDrive(place)}</small>}
                     </span>
                     <span>
@@ -1616,7 +1812,7 @@ export default function TripApp() {
                         )}
                         {selectedPlace.kind || selectedPlace.weather}
                       </span>
-                      <span><MapPin size={15} /> {selectedPlace.location || selectedPlace.base}</span>
+                      {selectedPlace.location && <span><MapPin size={15} /> {selectedPlace.location}</span>}
                       {collectionFor(selectedPlace) === "Food" && (
                         <span>
                           <Star size={15} fill="currentColor" />
@@ -1669,7 +1865,7 @@ export default function TripApp() {
               <div className="overview-band">
                 <span><Users size={18} /><strong>Family</strong><small>You and Yulia, Roni (3) and your six-year-old</small></span>
                 <span><Users size={18} /><strong>Friends</strong><small>One adult and child (7), 17-23 Aug</small></span>
-                <span><CalendarDays size={18} /><strong>Daily rhythm</strong><small>One main outing plus a weather backup</small></span>
+                <span><CalendarDays size={18} /><strong>Daily rhythm</strong><small>Up to two outings plus a weather backup</small></span>
               </div>
               <div className="trip-grid">
                 <section className="trip-section overview-route-section">
@@ -1838,7 +2034,6 @@ export default function TripApp() {
                     <span><Baby size={17} /><small>Age 3</small><strong>{selectedPlace.age3}/5</strong></span>
                     <span><Users size={17} /><small>Age 6–7</small><strong>{selectedPlace.age67}/5</strong></span>
                     <span><Accessibility size={17} /><small>Stroller</small><strong>{selectedPlace.stroller}</strong></span>
-                    <span><MapPin size={17} /><small>Best base</small><strong>{selectedPlace.base}</strong></span>
                   </>
                 ) : collectionFor(selectedPlace) === "Food" ? (
                   <>
@@ -1873,15 +2068,28 @@ export default function TripApp() {
               </div>
               <div className="drawer-actions">
                 {collectionFor(selectedPlace) === "Attractions" && (
-                  <button
-                    className="primary-button"
-                    onClick={() => {
-                      updateDay(selectedDate, { plan: selectedPlace.name });
-                      setSelectedPlace(null);
-                    }}
-                  >
-                    <CalendarDays size={17} /> Add to {shortDate(selectedDate)}
-                  </button>
+                  <>
+                    <button
+                      className="primary-button"
+                      disabled={!selectedPlaceFitsSelectedDay}
+                      onClick={() => {
+                        chooseDayPlace(selectedDate, "plan", selectedPlace.name);
+                        setSelectedPlace(null);
+                      }}
+                    >
+                      <CalendarDays size={17} /> Set as first
+                    </button>
+                    <button
+                      className="secondary-button"
+                      disabled={!selectedPlaceFitsSelectedDay}
+                      onClick={() => {
+                        chooseDayPlace(selectedDate, "secondPlan", selectedPlace.name);
+                        setSelectedPlace(null);
+                      }}
+                    >
+                      <Plus size={17} /> Add as second
+                    </button>
+                  </>
                 )}
                 <a
                   className="secondary-button"
@@ -1916,6 +2124,11 @@ export default function TripApp() {
                   {visited.includes(selectedPlace.name) ? "Visited" : "Mark visited"}
                 </button>
               </div>
+              {!selectedPlaceFitsSelectedDay && (
+                <p className="area-mismatch-note">
+                  Choose a day in this attraction’s trip area before adding it.
+                </p>
+              )}
             </div>
           </aside>
         </div>
@@ -1932,19 +2145,38 @@ export default function TripApp() {
               <button className="icon-button" onClick={() => setEditingDate(null)} aria-label="Close editor"><X size={19} /></button>
             </div>
             <label className="field">
-              <span>Main outing</span>
-              <select value={editingDay.plan} onChange={(e) => updateDay(editingDay.date, { plan: e.target.value })}>
-                <option value="">No main outing planned</option>
-                {attractionPlaces.map((place) => <option value={place.name} key={place.id}>{place.name}</option>)}
+              <span>First outing</span>
+              <select value={editingDay.plan} onChange={(e) => chooseDayPlace(editingDay.date, "plan", e.target.value)}>
+                <option value="">No outing planned</option>
+                {editingDayPlaces.map((place) => <option value={place.name} key={place.id}>{place.name}</option>)}
+              </select>
+            </label>
+            <label className="field">
+              <span>Second outing <small>Optional</small></span>
+              <select
+                value={editingDay.secondPlan || ""}
+                onChange={(e) => chooseDayPlace(editingDay.date, "secondPlan", e.target.value)}
+              >
+                <option value="">No second outing</option>
+                {editingDayPlaces.map((place) => <option value={place.name} key={place.id}>{place.name}</option>)}
               </select>
             </label>
             <label className="field">
               <span>Weather backup</span>
               <select value={editingDay.backup} onChange={(e) => updateDay(editingDay.date, { backup: e.target.value })}>
                 <option value="">No backup</option>
-                {attractionPlaces.map((place) => <option value={place.name} key={place.id}>{place.name}</option>)}
+                {editingDayPlaces.map((place) => <option value={place.name} key={place.id}>{place.name}</option>)}
               </select>
             </label>
+            {dayEffort(editingDay) && (
+              <div className={`schedule-assessment ${dayEffort(editingDay)?.tough ? "warn" : "good"}`}>
+                {dayEffort(editingDay)?.tough ? <CircleAlert size={18} /> : <Check size={18} />}
+                <span>
+                  <strong>{dayEffort(editingDay)?.title}</strong>
+                  <small>{dayEffort(editingDay)?.detail}</small>
+                </span>
+              </div>
+            )}
             <label className="field">
               <span>Day note</span>
               <textarea value={editingDay.note} onChange={(e) => updateDay(editingDay.date, { note: e.target.value })} rows={3} />

@@ -658,5 +658,83 @@
     "label": "Map location - not a photo",
     "detail": "No verified place photo was found; the marker shows the saved pin",
     "source": "https://www.openstreetmap.org/?mlat=48.1206&mlon=16.5608#map=13/48.1206/16.5608"
+  },
+  "place-149": {
+    "src": "./place-images/place-149.jpg",
+    "label": "Dachstein Giant Ice Cave",
+    "detail": "Official Dachstein Krippenstein photo",
+    "source": "https://www.dachstein-salzkammergut.com/en/summer/below-ground/dachstein-giant-ice-cave"
+  },
+  "place-150": {
+    "src": "./place-images/place-150.jpg",
+    "label": "Dachstein Mammoth Cave",
+    "detail": "Official Dachstein Krippenstein photo",
+    "source": "https://www.dachstein-salzkammergut.com/en/summer/below-ground/dachstein-mammoth-cave"
+  },
+  "place-151": {
+    "src": "./place-images/place-151.jpg",
+    "label": "Koppenbruller Cave",
+    "detail": "Official Dachstein Salzkammergut photo",
+    "source": "https://www.dachstein-salzkammergut.com/en/summer/below-ground/koppenbrueller-cave"
+  },
+  "place-152": {
+    "src": "./place-images/place-152.jpg",
+    "label": "Abarena Family Park",
+    "detail": "Official Abarena photo",
+    "source": "https://www.abarena.at/"
+  },
+  "place-153": {
+    "src": "./place-images/place-153.jpg",
+    "label": "Sommerrodelbahn Strobl",
+    "detail": "Photo from the summer toboggan listing",
+    "source": "https://www.rodelwelten.com/rodelbahnen/detail/sommerrodelbahn-strobl"
+  },
+  "place-154": {
+    "src": "./place-images/place-154.jpg",
+    "label": "Bad Ischl Vehicle Museum",
+    "detail": "Official tourism photo",
+    "source": "https://badischl.salzkammergut.at/en/oesterreich-poi/detail/401465/museum-of-vehicles-technology-and-aviation.html"
+  },
+  "place-155": {
+    "src": "./place-images/place-155.jpg",
+    "label": "Urzeitwald Gosau",
+    "detail": "Photo from the regional tourism page",
+    "source": "https://www.hallstatt.net/about-hallstatt/kind-and-kegel-en-US/gosau-ist-geologie-en-US/"
+  },
+  "place-156": {
+    "src": "./place-images/place-156.jpg",
+    "label": "Kitzlochklamm",
+    "detail": "Official Taxenbach tourism photo",
+    "source": "https://www.taxenbach.at/en/summer/kitzlochklamm"
+  },
+  "place-157": {
+    "src": "./place-images/place-157.jpg",
+    "label": "Lamprechtshohle",
+    "detail": "Official Salzburger Saalachtal photo",
+    "source": "https://www.lofer.com/en/experience-saalachtal/summer/lampsrecht-cave"
+  },
+  "place-158": {
+    "src": "./place-images/place-158.jpg",
+    "label": "Votter's Oldtimer Museum",
+    "detail": "Official museum photo",
+    "source": "https://www.oldtimer-museum.at/"
+  },
+  "place-159": {
+    "src": "./place-images/place-159.jpg",
+    "label": "Rauris Hochalm",
+    "detail": "Official Hochalmbahnen photo",
+    "source": "https://www.hochalmbahnen.at/en/summer/"
+  },
+  "place-160": {
+    "src": "./place-images/place-160.jpg",
+    "label": "Strandbad Zell am See",
+    "detail": "Official Zell am See-Kaprun photo",
+    "source": "https://www.zellamsee-kaprun.com/en/poi/lido-zell-am-see~1598"
+  },
+  "place-161": {
+    "src": "./place-images/place-161.jpg",
+    "label": "Kaprun Castle",
+    "detail": "Official Zell am See-Kaprun photo",
+    "source": "https://www.zellamsee-kaprun.com/en/poi/castle-kaprun~1603"
   }
 }

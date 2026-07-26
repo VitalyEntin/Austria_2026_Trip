@@ -336,7 +336,14 @@ main {
   background: #f5faf7;
 }
 
-.primary-button.compact {
+.primary-button:disabled,
+.secondary-button:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.primary-button.compact,
+.secondary-button.compact {
   min-height: 34px;
   padding: 0 12px;
 }
@@ -503,11 +510,27 @@ main {
   background: var(--green);
 }
 
+.recommendation-card.second-plan {
+  border-color: #6b4f88;
+  box-shadow: 0 0 0 2px rgba(107, 79, 136, 0.13);
+}
+
+.recommendation-card.second-plan .rank-chip {
+  color: white;
+  background: #6b4f88;
+}
+
 .recommendation-card .primary-button:disabled {
   color: var(--green);
   background: #e8f2ed;
   border-color: #b8d3c7;
   cursor: default;
+}
+
+.recommendation-card .secondary-button:disabled {
+  color: #5d4378;
+  background: #eee7f4;
+  border-color: #cfbddc;
 }
 
 .card-click {
@@ -632,10 +655,16 @@ main {
 
 .card-actions {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  justify-content: flex-start;
   align-items: center;
+  gap: 7px;
   padding: 10px 12px;
   border-top: 1px solid var(--line);
+}
+
+.card-actions .icon-button {
+  margin-left: auto;
 }
 
 .today-lower-grid {
@@ -821,6 +850,13 @@ main {
   font-weight: 750;
 }
 
+.day-plan-link.second {
+  display: flex;
+  width: fit-content;
+  margin-top: 4px;
+  color: #6b4f88;
+}
+
 .day-main > small {
   display: flex;
   align-items: center;
@@ -828,6 +864,16 @@ main {
   margin-top: 4px;
   color: var(--muted);
   font-size: 9px;
+}
+
+.day-main > small.day-effort-warning {
+  width: fit-content;
+  padding: 4px 6px;
+  color: #8b4a0a;
+  background: #fff3d8;
+  border: 1px solid #efd39a;
+  border-radius: 4px;
+  font-weight: 750;
 }
 
 .day-main p {
@@ -979,6 +1025,52 @@ main {
   margin-top: 2px;
   color: var(--muted);
   font-size: 9px;
+}
+
+.mini-place.second {
+  margin-top: -8px;
+  color: #5d4378;
+  background: #f3eef7;
+  border-color: #d6c7e0;
+}
+
+.schedule-assessment {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+  margin: 12px 0;
+  padding: 11px;
+  border: 1px solid;
+  border-radius: 6px;
+}
+
+.schedule-assessment.good {
+  color: #17624b;
+  background: #edf7f2;
+  border-color: #bddcca;
+}
+
+.schedule-assessment.warn {
+  color: #8b4a0a;
+  background: #fff5df;
+  border-color: #efd39a;
+}
+
+.schedule-assessment span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.schedule-assessment strong {
+  font-size: 10px;
+}
+
+.schedule-assessment small {
+  color: #66716d;
+  font-size: 9px;
+  line-height: 1.4;
 }
 
 .collection-tabs {
@@ -2068,6 +2160,13 @@ textarea:focus {
   margin-top: 22px;
 }
 
+.area-mismatch-note {
+  margin: 10px 0 0;
+  color: #8b4a0a;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
 .visited-button {
   color: var(--green-2);
 }
@@ -2103,6 +2202,13 @@ textarea:focus {
   color: var(--muted);
   font-size: 10px;
   font-weight: 700;
+}
+
+.field > span small {
+  margin-left: 4px;
+  color: #87928e;
+  font-size: 9px;
+  font-weight: 600;
 }
 
 .field textarea {
