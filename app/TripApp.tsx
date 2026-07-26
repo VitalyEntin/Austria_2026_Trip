@@ -26,7 +26,7 @@ import {
   RotateCcw,
   Search,
   ShoppingBag,
-  ShoppingCart,
+  Star,
   Store,
   Sun,
   TicketCheck,
@@ -37,10 +37,11 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import curationJson from "./data/curation.json";
 import placeImagesJson from "./data/place-images.json";
 import placesJson from "./data/places.json";
 
-type View = "today" | "itinerary" | "explore" | "map" | "trip";
+type View = "overview" | "today" | "itinerary" | "explore" | "food" | "shopping" | "map";
 type Collection = "Attractions" | "Food" | "Shopping";
 
 type Place = {
@@ -64,6 +65,11 @@ type Place = {
   location?: string;
   kid_fit?: string;
   route_use?: string;
+  google_rating?: number;
+  google_review_count?: number;
+  price_range?: string;
+  rating_checked?: string;
+  top_pick?: boolean;
 };
 
 type PlacePhotoInfo = {
@@ -101,7 +107,19 @@ type EventItem = {
   kind: "music" | "festival" | "travel" | "swim";
 };
 
-const places = placesJson as Place[];
+type CurationData = {
+  removeIds: string[];
+  overrides: Record<string, Partial<Place>>;
+  additions: Place[];
+};
+
+const curation = curationJson as CurationData;
+const places = [
+  ...(placesJson as Place[])
+    .filter((place) => !curation.removeIds.includes(place.id))
+    .map((place) => ({ ...place, ...(curation.overrides[place.id] ?? {}) })),
+  ...curation.additions,
+];
 const placeImages = placeImagesJson as Record<string, PlacePhotoInfo>;
 const TRIP_START = "2026-08-16";
 const TRIP_END = "2026-08-30";
@@ -194,7 +212,7 @@ const defaultItinerary: DayPlan[] = [
   },
   {
     date: "2026-08-23",
-    label: "Maya turns 40",
+    label: "Yulia turns 40",
     base: "Altaussee",
     people: "Family + friends until departure",
     plan: "Katrin Seilbahn Bad Ischl",
@@ -288,7 +306,7 @@ const events: EventItem[] = [
     time: "19:00",
     title: "Ausseer Baroque Days",
     place: "St Paul Church, Bad Aussee",
-    note: "A possible special end to Maya's birthday.",
+    note: "A possible special end to Yulia's birthday.",
     kind: "music",
   },
   {
@@ -325,20 +343,9 @@ const events: EventItem[] = [
   },
 ];
 
-const initialChecklist = [
-  { id: "airport-first", label: "Book Vienna Airport night for 16 August", done: false },
-  { id: "airport-last", label: "Book Vienna Airport night for 29 August", done: false },
-  { id: "summer-card", label: "Confirm Zell am See–Kaprun Summer Card", done: false },
-  { id: "carrier", label: "Pack child carrier and gravel-friendly stroller", done: false },
-  { id: "birthday-dinner", label: "Reserve Maya's birthday dinner", done: false },
-  { id: "cake", label: "Arrange birthday cakes and candles", done: false },
-  { id: "tickets", label: "Reserve timed mountain tickets after checking weather", done: false },
-  { id: "offline", label: "Download offline Google Maps areas", done: false },
-];
-
 const baseCoordinates: Record<string, { lat: number; lon: number; label: string }> = {
-  Altaussee: { lat: 47.638, lon: 13.765, label: "Altaussee" },
-  "Zell am See": { lat: 47.322, lon: 12.797, label: "Zell am See" },
+  Altaussee: { lat: 47.661053, lon: 13.742943, label: "Hagan Lodges" },
+  "Zell am See": { lat: 47.3045791, lon: 12.7936416, label: "POP-UP LIVING" },
   "Salzburg → Zell": { lat: 47.8007, lon: 13.0453, label: "Salzburg" },
   "Vienna Airport": { lat: 48.1197, lon: 16.5636, label: "Vienna Airport" },
 };
@@ -367,6 +374,10 @@ function longDate(value: string) {
     day: "numeric",
     month: "long",
   }).format(new Date(`${value}T12:00:00`));
+}
+
+function formatReviewCount(value?: number) {
+  return value == null ? "Review count unavailable" : `${value.toLocaleString("en-GB")} reviews`;
 }
 
 function weatherLabel(code: number) {
@@ -472,6 +483,7 @@ function LeafletMap({
   const containerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<import("leaflet").Map | null>(null);
   const layerRef = useRef<import("leaflet").LayerGroup | null>(null);
+  const initialBoundsSetRef = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -517,9 +529,10 @@ function LeafletMap({
         bounds.push([place.lat, place.lon]);
       });
       if (selected) {
-        mapInstanceRef.current.setView([selected.lat, selected.lon], 11, { animate: true });
-      } else if (bounds.length > 1) {
+        mapInstanceRef.current.panTo([selected.lat, selected.lon], { animate: true });
+      } else if (!initialBoundsSetRef.current && bounds.length > 1) {
         mapInstanceRef.current.fitBounds(bounds, { padding: [36, 36], maxZoom: 10 });
+        initialBoundsSetRef.current = true;
       }
     });
     return () => {
@@ -531,19 +544,18 @@ function LeafletMap({
 }
 
 export default function TripApp() {
-  const [view, setView] = useState<View>("today");
+  const [view, setView] = useState<View>("overview");
   const [selectedDate, setSelectedDate] = useState(initialTripDate);
   const [itinerary, setItinerary, itineraryReady] = useLocalStorageState(
     "austria-2026-itinerary",
     defaultItinerary,
   );
   const [visited, setVisited] = useLocalStorageState<string[]>("austria-2026-visited", []);
-  const [checklist, setChecklist] = useLocalStorageState("austria-2026-checklist", initialChecklist);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [editingDate, setEditingDate] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [baseFilter, setBaseFilter] = useState("All");
-  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [categoryFilter, setCategoryFilter] = useState("Priority A - Best Family Candidates");
   const [weatherFilter, setWeatherFilter] = useState("All");
   const [collectionFilter, setCollectionFilter] = useState<Collection>("Attractions");
   const [mapLayers, setMapLayers] = useState({
@@ -566,6 +578,17 @@ export default function TripApp() {
       void navigator.serviceWorker.register("./sw.js").catch(() => undefined);
     }
   }, []);
+
+  useEffect(() => {
+    if (!itineraryReady || !itinerary.some((day) => `${day.label} ${day.note}`.includes("Maya"))) return;
+    setItinerary((days) =>
+      days.map((day) => ({
+        ...day,
+        label: day.label.replaceAll("Maya", "Yulia"),
+        note: day.note.replaceAll("Maya", "Yulia"),
+      })),
+    );
+  }, [itinerary, itineraryReady, setItinerary]);
 
   useEffect(() => {
     let active = true;
@@ -710,10 +733,9 @@ export default function TripApp() {
   }
 
   function resetPersonalPlan() {
-    if (!window.confirm("Reset the itinerary, visited places and checklist on this device?")) return;
+    if (!window.confirm("Reset the itinerary and visited places on this device?")) return;
     setItinerary(defaultItinerary);
     setVisited([]);
-    setChecklist(initialChecklist);
   }
 
   function exportPlan() {
@@ -722,7 +744,6 @@ export default function TripApp() {
       exportedAt: new Date().toISOString(),
       itinerary,
       visited,
-      checklist,
     };
     const url = URL.createObjectURL(
       new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }),
@@ -740,7 +761,6 @@ export default function TripApp() {
       if (!Array.isArray(parsed.itinerary)) throw new Error("Invalid plan");
       setItinerary(parsed.itinerary);
       if (Array.isArray(parsed.visited)) setVisited(parsed.visited);
-      if (Array.isArray(parsed.checklist)) setChecklist(parsed.checklist);
     } catch {
       window.alert("That file is not a valid Austria trip plan.");
     }
@@ -750,13 +770,36 @@ export default function TripApp() {
     setSelectedPlace(place);
   }
 
+  function navigateTo(nextView: View, keepSelectedPlace = false) {
+    if (!keepSelectedPlace) setSelectedPlace(null);
+    setQuery("");
+    setBaseFilter("All");
+    setWeatherFilter("All");
+    if (nextView === "explore") {
+      setCollectionFilter("Attractions");
+      setCategoryFilter("Priority A - Best Family Candidates");
+    } else if (nextView === "food") {
+      setCollectionFilter("Food");
+      setCategoryFilter("All");
+    } else if (nextView === "shopping") {
+      setCollectionFilter("Shopping");
+      setCategoryFilter("All");
+    }
+    setView(nextView);
+  }
+
   const navItems: { id: View; label: string; icon: typeof Compass }[] = [
+    { id: "overview", label: "Overview", icon: Plane },
     { id: "today", label: "Today", icon: Compass },
     { id: "itinerary", label: "Itinerary", icon: CalendarDays },
     { id: "explore", label: "Explore", icon: Search },
+    { id: "food", label: "Food", icon: Utensils },
+    { id: "shopping", label: "Shopping", icon: ShoppingBag },
     { id: "map", label: "Map", icon: MapIcon },
-    { id: "trip", label: "Trip", icon: Plane },
   ];
+  const mobileNavItems = navItems.filter((item) =>
+    ["overview", "today", "explore", "map"].includes(item.id),
+  );
 
   return (
     <div className="app-shell">
@@ -775,7 +818,7 @@ export default function TripApp() {
               <button
                 key={item.id}
                 className={view === item.id ? "nav-item active" : "nav-item"}
-                onClick={() => setView(item.id)}
+                onClick={() => navigateTo(item.id)}
               >
                 <Icon size={19} />
                 <span>{item.label}</span>
@@ -797,26 +840,33 @@ export default function TripApp() {
           <button className="icon-button mobile-only" onClick={() => setMobileMenu(true)} aria-label="Open menu">
             <Menu size={21} />
           </button>
-          <div className="date-switcher">
-            <button className="icon-button" onClick={() => stepDay(-1)} disabled={dayIndex <= 0} aria-label="Previous day">
-              <ChevronLeft size={19} />
-            </button>
-            <button className="date-button" onClick={() => setView("itinerary")}>
+          {view === "overview" ? (
+            <button className="trip-window" onClick={() => navigateTo("itinerary")}>
               <CalendarDays size={17} />
-              <span>{longDate(selectedDate)}</span>
+              <span>16-30 August 2026</span>
             </button>
-            <button
-              className="icon-button"
-              onClick={() => stepDay(1)}
-              disabled={dayIndex >= itinerary.length - 1}
-              aria-label="Next day"
-            >
-              <ChevronRight size={19} />
-            </button>
-          </div>
+          ) : (
+            <div className="date-switcher">
+              <button className="icon-button" onClick={() => stepDay(-1)} disabled={dayIndex <= 0} aria-label="Previous day">
+                <ChevronLeft size={19} />
+              </button>
+              <button className="date-button" onClick={() => navigateTo("itinerary")}>
+                <CalendarDays size={17} />
+                <span>{longDate(selectedDate)}</span>
+              </button>
+              <button
+                className="icon-button"
+                onClick={() => stepDay(1)}
+                disabled={dayIndex >= itinerary.length - 1}
+                aria-label="Next day"
+              >
+                <ChevronRight size={19} />
+              </button>
+            </div>
+          )}
           <div className="topbar-place">
             <MapPin size={16} />
-            <span>{activeBase.label}</span>
+            <span>{view === "overview" ? "Austria" : activeBase.label}</span>
           </div>
         </header>
 
@@ -875,20 +925,24 @@ export default function TripApp() {
 
               <div className="section-heading">
                 <div>
-                  <span className="eyebrow">Best options</span>
-                  <h2>Plans for this day</h2>
+                  <span className="eyebrow">One main outing</span>
+                  <h2>Current plan and alternatives</h2>
+                  <p className="section-note">The selected card is the day plan. The other cards are backups, not extra required stops.</p>
                 </div>
                 <span className="quiet-label">{forecast ? "Weather ranked" : "Itinerary ranked"}</span>
               </div>
 
               <div className="recommendation-grid">
                 {recommendations.map((place, index) => {
+                  const isCurrentPlan = selectedDay?.plan === place.name;
                   return (
-                    <article className="recommendation-card" key={place.id}>
+                    <article className={isCurrentPlan ? "recommendation-card current-plan" : "recommendation-card"} key={place.id}>
                       <button className="card-click" onClick={() => openPlace(place)} aria-label={`View ${place.name}`}>
                         <div className="card-media">
                           <PlacePhoto key={place.id} place={place} />
-                          <span className="rank-chip">{index === 0 ? "Best match" : index === 1 ? "Easier option" : "Alternative"}</span>
+                          <span className="rank-chip">
+                            {isCurrentPlan ? "Current plan" : index === 0 ? "Best match" : index === 1 ? "Easier option" : "Alternative"}
+                          </span>
                         </div>
                         <div className="card-body">
                           <div className="card-title-row">
@@ -910,9 +964,10 @@ export default function TripApp() {
                         <button
                           className="primary-button compact"
                           onClick={() => updateDay(selectedDate, { plan: place.name })}
+                          disabled={isCurrentPlan}
                         >
                           <Check size={16} />
-                          Choose
+                          {isCurrentPlan ? "Selected" : "Choose as main"}
                         </button>
                         <a
                           className="icon-button"
@@ -960,7 +1015,7 @@ export default function TripApp() {
                   <div className="trip-stats">
                     <span><strong>{visited.length}</strong><small>places visited</small></span>
                     <span><strong>{events.filter((event) => event.date >= selectedDate).length}</strong><small>events ahead</small></span>
-                    <span><strong>{checklist.filter((item) => item.done).length}/{checklist.length}</strong><small>tasks complete</small></span>
+                    <span><strong>{itinerary.filter((day) => day.plan).length}</strong><small>days with a main plan</small></span>
                   </div>
                 </section>
               </div>
@@ -973,7 +1028,7 @@ export default function TripApp() {
                 <div>
                   <span className="eyebrow">16–30 August</span>
                   <h1>Itinerary</h1>
-                  <p>{itinerary.filter((day) => day.plan).length} planned days · changes stay on this device</p>
+                  <p>{itinerary.filter((day) => day.plan).length} days with one main outing · changes stay on this device</p>
                 </div>
                 <button className="secondary-button" onClick={() => setEditingDate(selectedDate)}>
                   <Plus size={17} />
@@ -1010,10 +1065,10 @@ export default function TripApp() {
                               if (plan) openPlace(plan);
                             }}
                           >
-                            {plan ? plan.name : "No attraction planned"}
+                            {plan ? `Main: ${plan.name}` : "No main outing planned"}
                             {plan && <ChevronRight size={16} />}
                           </button>
-                          {day.backup && <small>Backup: {day.backup}</small>}
+                          {day.backup && <small>Weather backup: {day.backup}</small>}
                           {day.note && <p>{day.note}</p>}
                           {dayEvents.map((event) => (
                             <span className="event-pill" key={event.title}>
@@ -1057,55 +1112,32 @@ export default function TripApp() {
             </section>
           )}
 
-          {view === "explore" && (
+          {(["explore", "food", "shopping"] as View[]).includes(view) && (
             <section className="view">
               <div className="page-heading">
                 <div>
-                  <span className="eyebrow">{places.length} curated stops</span>
-                  <h1>Explore</h1>
-                  <p>{filteredPlaces.length} {collectionFilter.toLowerCase()} match your current filters</p>
+                  <span className="eyebrow">
+                    {collectionFilter === "Attractions"
+                      ? `${attractionPlaces.length} curated attractions`
+                      : collectionFilter === "Food"
+                        ? `${places.filter((place) => collectionFor(place) === "Food").length} researched restaurants`
+                        : `${places.filter((place) => collectionFor(place) === "Shopping").length} useful shops`}
+                  </span>
+                  <h1>
+                    {collectionFilter === "Attractions"
+                      ? "Explore"
+                      : collectionFilter === "Food"
+                        ? "Food"
+                        : "Shopping"}
+                  </h1>
+                  <p>
+                    {collectionFilter === "Attractions"
+                      ? `${filteredPlaces.length} attractions match. Priority A is selected by default.`
+                      : collectionFilter === "Food"
+                        ? `${filteredPlaces.length} restaurants with cuisine, price and Google review detail.`
+                        : `${filteredPlaces.length} supermarkets, local producers and special shops.`}
+                  </p>
                 </div>
-              </div>
-              <div className="collection-tabs" role="tablist" aria-label="Place collection">
-                {([
-                  { id: "Attractions" as Collection, icon: MapPin, count: attractionPlaces.length },
-                  {
-                    id: "Food" as Collection,
-                    icon: Utensils,
-                    count: places.filter((place) => collectionFor(place) === "Food").length,
-                  },
-                  {
-                    id: "Shopping" as Collection,
-                    icon: ShoppingBag,
-                    count: places.filter((place) => collectionFor(place) === "Shopping").length,
-                  },
-                ]).map((item) => {
-                  const Icon = item.icon;
-                  const active = collectionFilter === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      className={`collection-tab ${item.id.toLowerCase()}${active ? " active" : ""}`}
-                      onClick={() => {
-                        setCollectionFilter(item.id);
-                        setCategoryFilter("All");
-                        setWeatherFilter("All");
-                      }}
-                      role="tab"
-                      aria-selected={active}
-                    >
-                      <Icon size={17} />
-                      <span className="collection-label">
-                        <strong>{item.id}</strong>
-                        <small>{item.count} places</small>
-                      </span>
-                      <span className="collection-state" aria-hidden="true">
-                        <span className="collection-switch" />
-                        <b>{active ? "ON" : "OFF"}</b>
-                      </span>
-                    </button>
-                  );
-                })}
               </div>
               <div className="filter-bar">
                 <label className="search-field">
@@ -1160,11 +1192,11 @@ export default function TripApp() {
                   </>
                 ) : (
                   <div className="collection-hint">
-                    {collectionFilter === "Food" ? <Utensils size={17} /> : <ShoppingCart size={17} />}
+                    {collectionFilter === "Food" ? <Utensils size={17} /> : <ShoppingBag size={17} />}
                     <span>
                       {collectionFilter === "Food"
-                        ? "Local picks, family-friendly meals and useful attraction stops"
-                        : "Supermarkets, regional food, books, crafts and useful large stores"}
+                        ? "Gold stars mark restaurants worth planning into the itinerary"
+                        : "Gold stars mark distinctive shops worth making time for"}
                     </span>
                   </div>
                 )}
@@ -1173,7 +1205,11 @@ export default function TripApp() {
                   onClick={() => {
                     setQuery("");
                     setBaseFilter("All");
-                    setCategoryFilter("All");
+                    setCategoryFilter(
+                      collectionFilter === "Attractions"
+                        ? "Priority A - Best Family Candidates"
+                        : "All",
+                    );
                     setWeatherFilter("All");
                   }}
                   aria-label="Clear filters"
@@ -1182,16 +1218,20 @@ export default function TripApp() {
                   <X size={18} />
                 </button>
               </div>
-              <div className="place-table-head">
-                <span>Place</span>
+              <div className={`place-table-head ${collectionFilter.toLowerCase()}-columns`}>
+                <span>{collectionFilter === "Food" ? "Restaurant" : collectionFilter === "Shopping" ? "Shop" : "Place"}</span>
                 <span>{collectionFilter === "Attractions" ? "Best base" : "Area"}</span>
-                <span>{collectionFilter === "Attractions" ? "Time" : "Best use"}</span>
-                <span>{collectionFilter === "Attractions" ? "Weather" : "Type"}</span>
-                <span>{collectionFilter === "Attractions" ? "Status" : "Hours"}</span>
+                <span>{collectionFilter === "Attractions" ? "Time" : "Type"}</span>
+                <span>{collectionFilter === "Attractions" ? "Weather" : collectionFilter === "Food" ? "Price" : "Best use"}</span>
+                <span>{collectionFilter === "Attractions" ? "Status" : collectionFilter === "Food" ? "Google rating" : "Priority"}</span>
               </div>
               <div className="place-list">
                 {filteredPlaces.map((place) => (
-                  <button className="place-row" key={place.id} onClick={() => openPlace(place)}>
+                  <button
+                    className={`place-row ${collectionFilter.toLowerCase()}-columns`}
+                    key={place.id}
+                    onClick={() => openPlace(place)}
+                  >
                     <span className="place-name-cell">
                       <span
                         className="category-swatch"
@@ -1199,23 +1239,45 @@ export default function TripApp() {
                       />
                       <span>
                         <strong>{place.name}</strong>
-                        <small>{place.priority}</small>
+                        <small>
+                          {place.top_pick && <Star className="top-pick-star" size={13} fill="currentColor" />}
+                          {place.top_pick ? "Plan for this" : place.priority}
+                        </small>
+                        {collectionFilter === "Food" && (
+                          <span className="mobile-food-meta">
+                            {place.kind} · {place.price_range || "Price not listed"}
+                          </span>
+                        )}
                       </span>
                     </span>
                     <span>{collectionFilter === "Attractions" ? place.base : place.location}</span>
-                    <span>{collectionFilter === "Attractions" ? place.duration : place.route_use}</span>
-                    <span>{collectionFilter === "Attractions" ? place.weather : place.kind}</span>
-                    <span className={`status-label ${availabilityTone(place.august_status)}`}>
+                    <span>{collectionFilter === "Attractions" ? place.duration : place.kind}</span>
+                    <span>
                       {collectionFilter === "Attractions"
-                        ? availabilityTone(place.august_status) === "good"
+                        ? place.weather
+                        : collectionFilter === "Food"
+                          ? place.price_range || "Price not listed"
+                          : place.route_use}
+                    </span>
+                    {collectionFilter === "Attractions" ? (
+                      <span className={`status-label ${availabilityTone(place.august_status)}`}>
+                        {availabilityTone(place.august_status) === "good"
                           ? "Open"
                           : availabilityTone(place.august_status) === "danger"
                             ? "Unconfirmed"
-                            : "Verify"
-                        : place.august_status.toLowerCase().includes("closed")
-                          ? "Schedule"
-                          : "Hours"}
-                    </span>
+                            : "Verify"}
+                      </span>
+                    ) : collectionFilter === "Food" ? (
+                      <span className="google-rating">
+                        <Star size={15} fill="currentColor" />
+                        <strong>{place.google_rating?.toFixed(1) ?? "N/A"}</strong>
+                        <small>{formatReviewCount(place.google_review_count)}</small>
+                      </span>
+                    ) : (
+                      <span className={place.top_pick ? "shop-priority top" : "shop-priority"}>
+                        {place.top_pick ? "Plan a visit" : "Useful stop"}
+                      </span>
+                    )}
                     <ChevronRight size={18} />
                   </button>
                 ))}
@@ -1294,9 +1356,29 @@ export default function TripApp() {
                         {selectedPlace.kind || selectedPlace.weather}
                       </span>
                       <span><MapPin size={15} /> {selectedPlace.location || selectedPlace.base}</span>
+                      {collectionFor(selectedPlace) === "Food" && (
+                        <span>
+                          <Star size={15} fill="currentColor" />
+                          {selectedPlace.google_rating?.toFixed(1) ?? "N/A"} Google · {selectedPlace.price_range || "price not listed"}
+                        </span>
+                      )}
                     </div>
                     <div className="map-preview-actions">
-                      <button className="primary-button" onClick={() => setView("explore")}>Full details</button>
+                      <button
+                        className="primary-button"
+                        onClick={() =>
+                          navigateTo(
+                            collectionFor(selectedPlace) === "Food"
+                              ? "food"
+                              : collectionFor(selectedPlace) === "Shopping"
+                                ? "shopping"
+                                : "explore",
+                            true,
+                          )
+                        }
+                      >
+                        Full details
+                      </button>
                       <a
                         className="icon-button"
                         href={`https://www.google.com/maps/dir/?api=1&destination=${selectedPlace.lat},${selectedPlace.lon}`}
@@ -1313,14 +1395,19 @@ export default function TripApp() {
             </section>
           )}
 
-          {view === "trip" && (
+          {view === "overview" && (
             <section className="view">
-              <div className="page-heading">
+              <div className="page-heading overview-heading">
                 <div>
-                  <span className="eyebrow">Family control center</span>
-                  <h1>Trip</h1>
-                  <p>Events, preparations and your personal plan</p>
+                  <span className="eyebrow">16-30 August 2026</span>
+                  <h1>Austria family trip</h1>
+                  <p>Two nature bases, a Salzburg transfer day and flexible plans for changing mountain weather.</p>
                 </div>
+              </div>
+              <div className="overview-band">
+                <span><Users size={18} /><strong>Family</strong><small>You and Yulia, Roni (3) and your six-year-old</small></span>
+                <span><Users size={18} /><strong>Friends</strong><small>One adult and child (7), 17-23 Aug</small></span>
+                <span><CalendarDays size={18} /><strong>Daily rhythm</strong><small>One main outing plus a weather backup</small></span>
               </div>
               <div className="trip-grid">
                 <section className="trip-section events-section">
@@ -1337,7 +1424,7 @@ export default function TripApp() {
                         key={`${event.date}-${event.title}`}
                         onClick={() => {
                           setSelectedDate(event.date);
-                          setView("today");
+                          navigateTo("today");
                         }}
                       >
                         <span className={`event-icon ${event.kind}`}><TicketCheck size={18} /></span>
@@ -1353,32 +1440,18 @@ export default function TripApp() {
                   </div>
                 </section>
 
-                <section className="trip-section checklist-section">
+                <section className="trip-section overview-actions-section">
                   <div className="section-heading compact-heading">
                     <div>
-                      <span className="eyebrow">Before departure</span>
-                      <h2>Checklist</h2>
+                      <span className="eyebrow">Start here</span>
+                      <h2>Choose what you need</h2>
                     </div>
-                    <span className="quiet-label">{checklist.filter((item) => item.done).length}/{checklist.length}</span>
                   </div>
-                  <div className="task-list">
-                    {checklist.map((item) => (
-                      <label className={item.done ? "task-row done" : "task-row"} key={item.id}>
-                        <input
-                          type="checkbox"
-                          checked={item.done}
-                          onChange={() =>
-                            setChecklist((items) =>
-                              items.map((current) =>
-                                current.id === item.id ? { ...current, done: !current.done } : current,
-                              ),
-                            )
-                          }
-                        />
-                        <span className="custom-check"><Check size={14} /></span>
-                        <span>{item.label}</span>
-                      </label>
-                    ))}
+                  <div className="overview-actions">
+                    <button onClick={() => navigateTo("today")}><Compass size={18} /><span><strong>Decide a day</strong><small>Weather and current plan</small></span><ChevronRight size={17} /></button>
+                    <button onClick={() => navigateTo("explore")}><Search size={18} /><span><strong>Browse attractions</strong><small>Starts with Priority A</small></span><ChevronRight size={17} /></button>
+                    <button onClick={() => navigateTo("food")}><Utensils size={18} /><span><strong>Find food</strong><small>Cuisine, price and Google ratings</small></span><ChevronRight size={17} /></button>
+                    <button onClick={() => navigateTo("shopping")}><ShoppingBag size={18} /><span><strong>Find shops</strong><small>Groceries and special local stops</small></span><ChevronRight size={17} /></button>
                   </div>
                 </section>
 
@@ -1395,11 +1468,17 @@ export default function TripApp() {
                   </div>
                   <div className="route-line">
                     <span><MountainSnow size={18} /></span>
-                    <div><strong>Altaussee / Loser</strong><small>17–24 Aug · 7 nights</small></div>
+                    <div>
+                      <strong>Hagan Lodges - Lodges Sandling</strong>
+                      <small>17-24 Aug · exact pin: 47.661053, 13.742943</small>
+                    </div>
                   </div>
                   <div className="route-line">
                     <span><MapPin size={18} /></span>
-                    <div><strong>Zell am See / Kaprun</strong><small>24–29 Aug · 5 nights</small></div>
+                    <div>
+                      <strong>POP-UP LIVING Zell am See</strong>
+                      <small>24-29 Aug · Karl-Flieher-Straße 1, 5700 Zell am See</small>
+                    </div>
                   </div>
                   <div className="route-line">
                     <span><Plane size={18} /></span>
@@ -1444,15 +1523,22 @@ export default function TripApp() {
       </div>
 
       <nav className="mobile-nav" aria-label="Main navigation">
-        {navItems.map((item) => {
+        {mobileNavItems.map((item) => {
           const Icon = item.icon;
           return (
-            <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => setView(item.id)}>
+            <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => navigateTo(item.id)}>
               <Icon size={20} />
               <span>{item.label}</span>
             </button>
           );
         })}
+        <button
+          className={["itinerary", "food", "shopping"].includes(view) ? "active" : ""}
+          onClick={() => setMobileMenu(true)}
+        >
+          <Menu size={20} />
+          <span>More</span>
+        </button>
       </nav>
 
       {mobileMenu && (
@@ -1470,7 +1556,7 @@ export default function TripApp() {
                   key={item.id}
                   className={view === item.id ? "nav-item active" : "nav-item"}
                   onClick={() => {
-                    setView(item.id);
+                    navigateTo(item.id);
                     setMobileMenu(false);
                   }}
                 >
@@ -1488,12 +1574,17 @@ export default function TripApp() {
             <button className="icon-button drawer-close" onClick={() => setSelectedPlace(null)} aria-label="Close details">
               <X size={20} />
             </button>
-            <div className="drawer-media">
-              <PlacePhoto key={selectedPlace.id} place={selectedPlace} />
-            </div>
+            {(collectionFor(selectedPlace) === "Attractions" || photoFor(selectedPlace).src) && (
+              <div className="drawer-media">
+                <PlacePhoto key={selectedPlace.id} place={selectedPlace} />
+              </div>
+            )}
             <div className="drawer-content">
               <div className="drawer-kicker">
                 <span className="category-label">{categoryMeta[selectedPlace.category]?.short}</span>
+                {selectedPlace.top_pick && (
+                  <span className="top-pick-badge"><Star size={13} fill="currentColor" /> Plan for this</span>
+                )}
                 {photoFor(selectedPlace).source && (
                   <a href={photoFor(selectedPlace).source} target="_blank" rel="noreferrer">
                     Visual source <ExternalLink size={12} />
@@ -1516,15 +1607,34 @@ export default function TripApp() {
                     <span><Accessibility size={17} /><small>Stroller</small><strong>{selectedPlace.stroller}</strong></span>
                     <span><MapPin size={17} /><small>Best base</small><strong>{selectedPlace.base}</strong></span>
                   </>
-                ) : (
+                ) : collectionFor(selectedPlace) === "Food" ? (
                   <>
                     <span>
-                      {collectionFor(selectedPlace) === "Food" ? <Utensils size={17} /> : <Store size={17} />}
-                      <small>Type</small><strong>{selectedPlace.kind}</strong>
+                      <Utensils size={17} />
+                      <small>Cuisine</small><strong>{selectedPlace.kind}</strong>
+                    </span>
+                    <span><Gauge size={17} /><small>Price</small><strong>{selectedPlace.price_range || "Not listed"}</strong></span>
+                    <span>
+                      <Star size={17} fill="currentColor" />
+                      <small>Google rating</small>
+                      <strong>{selectedPlace.google_rating?.toFixed(1) ?? "N/A"} · {formatReviewCount(selectedPlace.google_review_count)}</strong>
                     </span>
                     <span><MapPin size={17} /><small>Area</small><strong>{selectedPlace.location}</strong></span>
                     <span><Gauge size={17} /><small>Best use</small><strong>{selectedPlace.route_use}</strong></span>
                     <span><Users size={17} /><small>Family fit</small><strong>{selectedPlace.kid_fit}</strong></span>
+                    <span><TicketCheck size={17} /><small>Rating checked</small><strong>{selectedPlace.rating_checked || "Not recorded"}</strong></span>
+                  </>
+                ) : (
+                  <>
+                    <span><Store size={17} /><small>Shop type</small><strong>{selectedPlace.kind}</strong></span>
+                    <span><MapPin size={17} /><small>Area</small><strong>{selectedPlace.location}</strong></span>
+                    <span><Gauge size={17} /><small>Best use</small><strong>{selectedPlace.route_use}</strong></span>
+                    <span><Users size={17} /><small>Family fit</small><strong>{selectedPlace.kid_fit}</strong></span>
+                    <span>
+                      <Star size={17} fill={selectedPlace.top_pick ? "currentColor" : "none"} />
+                      <small>Recommendation</small>
+                      <strong>{selectedPlace.top_pick ? "Plan a visit" : "Useful if nearby"}</strong>
+                    </span>
                   </>
                 )}
               </div>
@@ -1588,14 +1698,14 @@ export default function TripApp() {
               <button className="icon-button" onClick={() => setEditingDate(null)} aria-label="Close editor"><X size={19} /></button>
             </div>
             <label className="field">
-              <span>Main plan</span>
+              <span>Main outing</span>
               <select value={editingDay.plan} onChange={(e) => updateDay(editingDay.date, { plan: e.target.value })}>
-                <option value="">No attraction planned</option>
+                <option value="">No main outing planned</option>
                 {attractionPlaces.map((place) => <option value={place.name} key={place.id}>{place.name}</option>)}
               </select>
             </label>
             <label className="field">
-              <span>Backup plan</span>
+              <span>Weather backup</span>
               <select value={editingDay.backup} onChange={(e) => updateDay(editingDay.date, { backup: e.target.value })}>
                 <option value="">No backup</option>
                 {attractionPlaces.map((place) => <option value={place.name} key={place.id}>{place.name}</option>)}

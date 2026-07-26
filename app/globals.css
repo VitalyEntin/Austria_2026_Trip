@@ -199,6 +199,20 @@ img {
   gap: 4px;
 }
 
+.trip-window {
+  width: fit-content;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  color: var(--ink);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .date-button,
 .icon-button,
 .primary-button,
@@ -451,6 +465,14 @@ main {
   font-size: 10px;
 }
 
+.section-note {
+  max-width: 620px;
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
 .recommendation-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -469,6 +491,23 @@ main {
 .recommendation-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow);
+}
+
+.recommendation-card.current-plan {
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px rgba(25, 122, 90, 0.13);
+}
+
+.recommendation-card.current-plan .rank-chip {
+  color: white;
+  background: var(--green);
+}
+
+.recommendation-card .primary-button:disabled {
+  color: var(--green);
+  background: #e8f2ed;
+  border-color: #b8d3c7;
+  cursor: default;
 }
 
 .card-click {
@@ -1078,6 +1117,37 @@ textarea:focus {
   background: white;
 }
 
+.top-pick-star {
+  flex: 0 0 auto;
+  margin-right: 4px;
+  color: #b77705;
+  vertical-align: -2px;
+}
+
+.google-rating {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  justify-content: start;
+  gap: 1px 5px;
+  color: #8a5b00;
+}
+
+.google-rating small {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.shop-priority {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.shop-priority.top {
+  color: #9a6500;
+}
+
 .place-name-cell {
   display: flex;
   align-items: center;
@@ -1099,6 +1169,10 @@ textarea:focus {
 .place-name-cell small {
   color: var(--muted);
   font-size: 9px;
+}
+
+.mobile-food-meta {
+  display: none;
 }
 
 .category-swatch {
@@ -1323,6 +1397,85 @@ textarea:focus {
 
 .trip-section {
   min-width: 0;
+}
+
+.overview-heading {
+  padding-bottom: 5px;
+}
+
+.overview-band {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 10px 0 30px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.overview-band > span {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 2px 8px;
+  padding: 16px 18px;
+  border-right: 1px solid var(--line);
+}
+
+.overview-band > span:last-child {
+  border-right: 0;
+}
+
+.overview-band svg {
+  grid-row: span 2;
+  color: var(--green);
+}
+
+.overview-band strong {
+  font-size: 11px;
+}
+
+.overview-band small {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.overview-actions {
+  display: grid;
+  gap: 2px;
+}
+
+.overview-actions button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 9px;
+  align-items: center;
+  padding: 12px 3px;
+  color: var(--ink);
+  background: transparent;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  text-align: left;
+}
+
+.overview-actions button > svg:first-child {
+  color: var(--green);
+}
+
+.overview-actions button > span {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.overview-actions strong {
+  font-size: 11px;
+}
+
+.overview-actions small {
+  color: var(--muted);
+  font-size: 9px;
 }
 
 .events-section {
@@ -1560,6 +1713,16 @@ textarea:focus {
   font-weight: 750;
 }
 
+.top-pick-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #8a5b00;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
 .place-drawer h2 {
   margin-top: 5px;
   font-size: 25px;
@@ -1735,6 +1898,15 @@ textarea:focus {
     display: none;
   }
 
+  .mobile-food-meta {
+    display: block;
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .filter-bar {
     grid-template-columns: 1fr 1fr 1fr;
   }
@@ -1786,6 +1958,12 @@ textarea:focus {
 
   .date-switcher {
     justify-content: center;
+  }
+
+  .trip-window {
+    justify-self: center;
+    padding-inline: 2px;
+    font-size: 11px;
   }
 
   .date-button {
@@ -1867,6 +2045,20 @@ textarea:focus {
   .itinerary-layout,
   .trip-grid {
     grid-template-columns: 1fr;
+  }
+
+  .overview-band {
+    grid-template-columns: 1fr;
+    margin-bottom: 24px;
+  }
+
+  .overview-band > span {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .overview-band > span:last-child {
+    border-bottom: 0;
   }
 
   .itinerary-side {
