@@ -2447,27 +2447,6 @@ textarea:focus {
     color: var(--green);
   }
 
-  .mobile-nav button.mobile-nav-primary {
-    color: #144f40;
-    font-weight: 800;
-  }
-
-  .mobile-nav button.mobile-nav-primary svg {
-    width: 30px;
-    height: 30px;
-    margin-top: -12px;
-    padding: 6px;
-    color: white;
-    background: var(--green);
-    border-radius: 7px;
-    box-shadow: 0 4px 11px rgba(20, 79, 64, 0.25);
-  }
-
-  .mobile-nav button.mobile-nav-primary.active svg {
-    background: #0f5945;
-    box-shadow: 0 0 0 3px #cce4da, 0 4px 11px rgba(20, 79, 64, 0.25);
-  }
-
   .mobile-menu-backdrop {
     position: fixed;
     inset: 0;

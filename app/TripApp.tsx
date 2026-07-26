@@ -185,9 +185,9 @@ const defaultItinerary: DayPlan[] = [
     label: "Clear-weather mountain",
     base: "Altaussee",
     people: "Everyone together",
-    plan: "5 Fingers",
-    backup: "Hallstatt village",
-    note: "Bring warm layers and the carrier.",
+    plan: "Dachstein Giant Ice Cave",
+    backup: "5 Fingers",
+    note: "Start with the Ice Cave. Add 5 Fingers only if visibility and everyone's energy are still good. Bring warm layers and the carrier.",
   },
   {
     date: "2026-08-20",
@@ -679,6 +679,24 @@ export default function TripApp() {
         label: day.label.replaceAll("Maya", "Yulia"),
         note: day.note.replaceAll("Maya", "Yulia"),
       })),
+    );
+  }, [itinerary, itineraryReady, setItinerary]);
+
+  useEffect(() => {
+    if (!itineraryReady) return;
+    const dachsteinDay = itinerary.find((day) => day.date === "2026-08-19");
+    if (dachsteinDay?.plan !== "5 Fingers") return;
+    setItinerary((days) =>
+      days.map((day) =>
+        day.date === "2026-08-19"
+          ? {
+              ...day,
+              plan: "Dachstein Giant Ice Cave",
+              backup: "5 Fingers",
+              note: "Start with the Ice Cave. Add 5 Fingers only if visibility and everyone's energy are still good. Bring warm layers and the carrier.",
+            }
+          : day,
+      ),
     );
   }, [itinerary, itineraryReady, setItinerary]);
 
@@ -1745,9 +1763,7 @@ export default function TripApp() {
           return (
             <button
               key={item.id}
-              className={`${view === item.id ? "active" : ""}${
-                item.id === "itinerary" ? " mobile-nav-primary" : ""
-              }`}
+              className={view === item.id ? "active" : ""}
               onClick={() => navigateTo(item.id)}
             >
               <Icon size={20} />
