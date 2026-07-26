@@ -648,6 +648,7 @@ export default function TripApp() {
   const [categoryFilter, setCategoryFilter] = useState("Priority A - Best Family Candidates");
   const [weatherFilter, setWeatherFilter] = useState("All");
   const [collectionFilter, setCollectionFilter] = useState<Collection>("Attractions");
+  const [mapCategoryFilter, setMapCategoryFilter] = useState("All");
   const [mapLayers, setMapLayers] = useState({
     Attractions: true,
     Food: false,
@@ -799,6 +800,18 @@ export default function TripApp() {
     [itinerary],
   );
 
+  const itineraryDatesByPlaceId = useMemo(() => {
+    const datesByPlace = new Map<string, string[]>();
+    itinerary.forEach((day) => {
+      const placeId = placeByName.get(day.plan)?.id;
+      if (!placeId) return;
+      const dates = datesByPlace.get(placeId) ?? [];
+      dates.push(shortDate(day.date));
+      datesByPlace.set(placeId, dates);
+    });
+    return datesByPlace;
+  }, [itinerary]);
+
   const mapPlaces = useMemo(() => {
     if (itineraryMapOnly) {
       return places.filter(
@@ -816,16 +829,15 @@ export default function TripApp() {
           .includes(term)
       )
         return false;
-      if (baseFilter === "First base" && !place.base.includes("First")) return false;
-      if (baseFilter === "Second base" && !place.base.includes("Second")) return false;
       if (
-        baseFilter === "Transfer" &&
-        !/(transfer|arrival|departure)/.test(place.base.toLowerCase())
+        collectionFor(place) === "Attractions" &&
+        mapCategoryFilter !== "All" &&
+        place.category !== mapCategoryFilter
       )
         return false;
       return true;
     });
-  }, [baseFilter, itineraryMapOnly, itineraryPlaceIds, mapLayers, query]);
+  }, [itineraryMapOnly, itineraryPlaceIds, mapCategoryFilter, mapLayers, query]);
 
   const eventsToday = events.filter((event) => event.date === selectedDate);
   const selectedPlanPlace = selectedDay?.plan ? placeByName.get(selectedDay.plan) : undefined;
@@ -885,6 +897,7 @@ export default function TripApp() {
     setQuery("");
     setBaseFilter("All");
     setWeatherFilter("All");
+    setMapCategoryFilter("All");
     if (nextView === "explore") {
       setCollectionFilter("Attractions");
       setCategoryFilter("Priority A - Best Family Candidates");
@@ -908,9 +921,10 @@ export default function TripApp() {
     { id: "shopping", label: "Shopping", icon: ShoppingBag },
     { id: "map", label: "Map", icon: MapIcon },
   ];
-  const mobileNavItems = navItems.filter((item) =>
-    ["overview", "today", "explore", "map"].includes(item.id),
-  );
+  const mobileNavOrder: View[] = ["overview", "today", "itinerary", "explore", "map"];
+  const mobileNavItems = mobileNavOrder
+    .map((id) => navItems.find((item) => item.id === id))
+    .filter((item): item is (typeof navItems)[number] => Boolean(item));
 
   return (
     <div className="app-shell">
@@ -1407,7 +1421,9 @@ export default function TripApp() {
               <div className="place-list">
                 {filteredPlaces.map((place) => (
                   <button
-                    className={`place-row ${collectionFilter.toLowerCase()}-columns`}
+                    className={`place-row ${collectionFilter.toLowerCase()}-columns${
+                      itineraryPlaceIds.has(place.id) ? " is-itinerary-place" : ""
+                    }`}
                     key={place.id}
                     onClick={() => openPlace(place)}
                   >
@@ -1422,6 +1438,12 @@ export default function TripApp() {
                           {place.top_pick && <Star className="top-pick-star" size={13} fill="currentColor" />}
                           {place.top_pick ? "Plan for this" : place.priority}
                         </small>
+                        {collectionFilter === "Attractions" && itineraryDatesByPlaceId.has(place.id) && (
+                          <span className="itinerary-selection-badge">
+                            <CalendarDays size={12} />
+                            In itinerary · {itineraryDatesByPlaceId.get(place.id)?.join(", ")}
+                          </span>
+                        )}
                         {collectionFilter === "Food" && (
                           <span className="mobile-food-meta">
                             {place.kind} · {place.price_range || "Price not listed"}
@@ -1488,11 +1510,17 @@ export default function TripApp() {
                   <Search size={17} />
                   <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Find a place" />
                 </label>
-                <select value={baseFilter} onChange={(e) => setBaseFilter(e.target.value)} aria-label="Filter map by base">
-                  <option>All</option>
-                  <option>First base</option>
-                  <option>Second base</option>
-                  <option>Transfer</option>
+                <select
+                  value={mapCategoryFilter}
+                  onChange={(e) => setMapCategoryFilter(e.target.value)}
+                  aria-label="Filter map by attraction category"
+                >
+                  <option value="All">All categories</option>
+                  <option value="Priority A - Best Family Candidates">Priority A</option>
+                  <option value="Priority B - Good Alternatives">Priority B</option>
+                  <option value="Rain & Easy Recovery">Bad weather & easy</option>
+                  <option value="Salzburg Transfer Day">Salzburg</option>
+                  <option value="Longer-Drive Reserves & Verify">Reserves</option>
                 </select>
                 <div className="map-layer-controls" aria-label="Map layers">
                   {([
@@ -1715,19 +1743,18 @@ export default function TripApp() {
         {mobileNavItems.map((item) => {
           const Icon = item.icon;
           return (
-            <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => navigateTo(item.id)}>
+            <button
+              key={item.id}
+              className={`${view === item.id ? "active" : ""}${
+                item.id === "itinerary" ? " mobile-nav-primary" : ""
+              }`}
+              onClick={() => navigateTo(item.id)}
+            >
               <Icon size={20} />
               <span>{item.label}</span>
             </button>
           );
         })}
-        <button
-          className={["itinerary", "events", "food", "shopping"].includes(view) ? "active" : ""}
-          onClick={() => setMobileMenu(true)}
-        >
-          <Menu size={20} />
-          <span>More</span>
-        </button>
       </nav>
 
       {mobileMenu && (

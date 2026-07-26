@@ -1199,6 +1199,30 @@ textarea:focus {
   background: white;
 }
 
+.place-row.is-itinerary-place {
+  background: #f4f0f7;
+  box-shadow: inset 4px 0 0 #6b4f88;
+}
+
+.place-row.is-itinerary-place:hover {
+  background: #eee7f4;
+}
+
+.itinerary-selection-badge {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+  padding: 4px 6px;
+  color: #5d4378;
+  background: #e7dcef;
+  border: 1px solid #cfbddc;
+  border-radius: 4px;
+  font-size: 8px;
+  font-weight: 800;
+}
+
 .top-pick-star {
   flex: 0 0 auto;
   margin-right: 4px;
@@ -2421,6 +2445,27 @@ textarea:focus {
 
   .mobile-nav button.active {
     color: var(--green);
+  }
+
+  .mobile-nav button.mobile-nav-primary {
+    color: #144f40;
+    font-weight: 800;
+  }
+
+  .mobile-nav button.mobile-nav-primary svg {
+    width: 30px;
+    height: 30px;
+    margin-top: -12px;
+    padding: 6px;
+    color: white;
+    background: var(--green);
+    border-radius: 7px;
+    box-shadow: 0 4px 11px rgba(20, 79, 64, 0.25);
+  }
+
+  .mobile-nav button.mobile-nav-primary.active svg {
+    background: #0f5945;
+    box-shadow: 0 0 0 3px #cce4da, 0 4px 11px rgba(20, 79, 64, 0.25);
   }
 
   .mobile-menu-backdrop {
