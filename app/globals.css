@@ -2153,6 +2153,14 @@ textarea:focus {
   line-height: 1.35;
 }
 
+.detail-grid em {
+  grid-column: 2;
+  color: var(--muted);
+  font-size: 8px;
+  font-style: normal;
+  line-height: 1.35;
+}
+
 .drawer-actions {
   display: flex;
   flex-wrap: wrap;

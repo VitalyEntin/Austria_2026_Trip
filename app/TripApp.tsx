@@ -39,8 +39,10 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import curationJson from "./data/curation.json";
+import driveTimesJson from "./data/drive-times.json";
 import placeImagesJson from "./data/place-images.json";
 import placesJson from "./data/places.json";
+import routingOverridesJson from "./data/routing-overrides.json";
 
 type View = "overview" | "today" | "itinerary" | "events" | "explore" | "food" | "shopping" | "map";
 type Collection = "Attractions" | "Food" | "Shopping";
@@ -115,6 +117,22 @@ type CurationData = {
   additions: Place[];
 };
 
+type DriveTimesData = {
+  generatedAt: string;
+  provider: string;
+  bases: Record<string, { lat: number; lon: number }>;
+  baseToPlace: Record<string, Record<string, number | null>>;
+  placeToBase: Record<string, Record<string, number | null>>;
+  baseToBase: Record<string, Record<string, number | null>>;
+  betweenAttractions: Record<string, Record<string, number | null>>;
+};
+
+type RoutingOverride = {
+  lat: number;
+  lon: number;
+  access: string;
+};
+
 const curation = curationJson as CurationData;
 const places = [
   ...(placesJson as Place[])
@@ -123,6 +141,8 @@ const places = [
   ...curation.additions,
 ];
 const placeImages = placeImagesJson as Record<string, PlacePhotoInfo>;
+const driveTimes = driveTimesJson as DriveTimesData;
+const routingOverrides = routingOverridesJson as Record<string, RoutingOverride>;
 const TRIP_START = "2026-08-16";
 const TRIP_END = "2026-08-30";
 
@@ -383,27 +403,32 @@ function placeFitsDay(place: Place, day: DayPlan) {
   return true;
 }
 
-function distanceKm(
-  from: { lat: number; lon: number },
-  to: { lat: number; lon: number },
-) {
-  const radians = (value: number) => (value * Math.PI) / 180;
-  const earthRadius = 6371;
-  const latitudeDelta = radians(to.lat - from.lat);
-  const longitudeDelta = radians(to.lon - from.lon);
-  const a =
-    Math.sin(latitudeDelta / 2) ** 2 +
-    Math.cos(radians(from.lat)) *
-      Math.cos(radians(to.lat)) *
-      Math.sin(longitudeDelta / 2) ** 2;
-  return earthRadius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+function driveMinutesBetween(first: Place, second: Place) {
+  return driveTimes.betweenAttractions[first.id]?.[second.id] ?? 0;
 }
 
-function driveMinutesBetween(first: Place, second: Place) {
-  const directDistance = distanceKm(first, second);
-  const estimatedRoadKm = directDistance * 1.38 + 2;
-  const averageSpeed = estimatedRoadKm < 12 ? 34 : estimatedRoadKm < 50 ? 47 : 58;
-  return Math.max(5, Math.round(((estimatedRoadKm / averageSpeed) * 60) / 5) * 5);
+function formatDriveMinutes(minutes: number | null | undefined) {
+  if (minutes == null || minutes <= 0) return "time unavailable";
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  return `${hours}h${remainder ? ` ${remainder}m` : ""}`;
+}
+
+function baseToPlaceMinutes(baseName: string, place: Place) {
+  return driveTimes.baseToPlace[baseName]?.[place.id] ?? null;
+}
+
+function placeToBaseMinutes(place: Place, baseName: string) {
+  return driveTimes.placeToBase[baseName]?.[place.id] ?? null;
+}
+
+function baseToBaseMinutes(fromBase: string, toBase: string) {
+  return driveTimes.baseToBase[fromBase]?.[toBase] ?? null;
+}
+
+function routeAccess(place: Place) {
+  return routingOverrides[place.id]?.access;
 }
 
 function upperDurationHours(place?: Place) {
@@ -444,37 +469,46 @@ function dayEffort(day: DayPlan) {
   return {
     tough,
     title: tough ? "This may be too much for one day" : "These two outings fit",
-    detail: `Allow up to ${Math.round(activityHours * 2) / 2} hours for activities, plus about ${betweenMinutes} minutes between them.`,
+    detail: `Allow up to ${Math.round(activityHours * 2) / 2} hours for activities, plus about ${formatDriveMinutes(betweenMinutes)} between them.`,
   };
 }
 
 function approximateDrive(place: Place, baseName = baseForPlace(place)) {
   if (isHomePlace(place)) return "Home";
-  const base = baseCoordinates[baseName] ?? baseCoordinates.Altaussee;
-  const directDistance = distanceKm(base, place);
-  const estimatedRoadKm = directDistance * (directDistance > 90 ? 1.18 : 1.38) + 2;
-  const averageSpeed =
-    estimatedRoadKm < 12 ? 34 : estimatedRoadKm < 50 ? 47 : estimatedRoadKm < 120 ? 58 : 76;
-  const minutes = Math.max(5, Math.round((estimatedRoadKm / averageSpeed) * 12) * 5);
-  if (minutes >= 120) {
-    const hours = Math.floor(minutes / 60);
-    const remainder = minutes % 60;
-    return `~${hours}h${remainder ? ` ${remainder}m` : ""} drive`;
-  }
-  if (minutes >= 60) return `~1h ${minutes - 60}m drive`;
-  return `~${minutes} min drive`;
+  const minutes = baseToPlaceMinutes(baseName, place);
+  return minutes == null ? "Drive time unavailable" : `~${formatDriveMinutes(minutes)} drive`;
 }
 
 function itineraryDrive(day: DayPlan, place?: Place, secondPlace?: Place) {
   if (day.date === "2026-08-16") return "~5 min from the airport to the overnight area";
-  if (day.date === "2026-08-17") return "~3h 10m total toward Hagan Lodges, plus stops";
-  if (day.date === "2026-08-24") return "~55m to Salzburg, then ~1h 15m to POP-UP LIVING";
-  if (day.date === "2026-08-29") return "~4h 10m from POP-UP LIVING to Vienna Airport";
+  if (day.date === "2026-08-17") {
+    if (!place) {
+      return `~${formatDriveMinutes(baseToBaseMinutes("Vienna Airport", "Altaussee"))} to Hagan Lodges`;
+    }
+    const firstLeg = baseToPlaceMinutes("Vienna Airport", place);
+    if (secondPlace) {
+      return `~${formatDriveMinutes(firstLeg)} to ${place.name} · ~${formatDriveMinutes(driveMinutesBetween(place, secondPlace))} to ${secondPlace.name} · ~${formatDriveMinutes(placeToBaseMinutes(secondPlace, "Altaussee"))} home`;
+    }
+    return `~${formatDriveMinutes(firstLeg)} to ${place.name} · ~${formatDriveMinutes(placeToBaseMinutes(place, "Altaussee"))} to Hagan Lodges`;
+  }
+  if (day.date === "2026-08-24") {
+    if (!place) {
+      return `~${formatDriveMinutes(baseToBaseMinutes("Altaussee", "Salzburg → Zell"))} to Salzburg · ~${formatDriveMinutes(baseToBaseMinutes("Salzburg → Zell", "Zell am See"))} to POP-UP LIVING`;
+    }
+    const firstLeg = baseToPlaceMinutes("Altaussee", place);
+    if (secondPlace) {
+      return `~${formatDriveMinutes(firstLeg)} to ${place.name} · ~${formatDriveMinutes(driveMinutesBetween(place, secondPlace))} to ${secondPlace.name} · ~${formatDriveMinutes(placeToBaseMinutes(secondPlace, "Zell am See"))} home`;
+    }
+    return `~${formatDriveMinutes(firstLeg)} to ${place.name} · ~${formatDriveMinutes(placeToBaseMinutes(place, "Zell am See"))} to POP-UP LIVING`;
+  }
+  if (day.date === "2026-08-29") {
+    return `~${formatDriveMinutes(baseToBaseMinutes("Zell am See", "Vienna Airport"))} from POP-UP LIVING to Vienna Airport`;
+  }
   if (day.date === "2026-08-30") return "~5 min from the airport hotel to the terminal";
   if (!place) return "";
   const firstDrive = approximateDrive(place, day.base);
   return secondPlace
-    ? `${firstDrive} · then ~${driveMinutesBetween(place, secondPlace)} min between outings`
+    ? `${firstDrive} · then ~${formatDriveMinutes(driveMinutesBetween(place, secondPlace))} between outings`
     : firstDrive;
 }
 
@@ -483,13 +517,25 @@ function itineraryStory(day: DayPlan, place?: Place, secondPlace?: Place) {
     return "Land at Vienna Airport at 18:00, collect the rental car and make only the short drive to the airport-area hotel. Dinner and sleep are the plan.";
   }
   if (day.date === "2026-08-17") {
-    return `Leave the Vienna Airport area after breakfast and drive west toward Altaussee. Stop at ${place?.name || "Gmunden"} for lunch and a walk, then continue to Hagan Lodges, buy groceries and settle in.`;
+    if (!place) {
+      return `Leave the Vienna Airport area after breakfast and drive about ${formatDriveMinutes(baseToBaseMinutes("Vienna Airport", "Altaussee"))} to Hagan Lodges, with a generous lunch and play break. Buy groceries, settle in and keep the evening quiet.`;
+    }
+    const secondStop = secondPlace
+      ? ` Continue about ${formatDriveMinutes(driveMinutesBetween(place, secondPlace))} to ${secondPlace.name}, then allow about ${formatDriveMinutes(placeToBaseMinutes(secondPlace, "Altaussee"))} for the final drive to Hagan Lodges.`
+      : ` Then allow about ${formatDriveMinutes(placeToBaseMinutes(place, "Altaussee"))} for the final drive to Hagan Lodges.`;
+    return `Leave the Vienna Airport area after breakfast and drive about ${formatDriveMinutes(baseToPlaceMinutes("Vienna Airport", place))} to ${place.name} for lunch and a walk.${secondStop} Buy groceries and settle in.`;
   }
   if (day.date === "2026-08-24") {
-    return `Check out of Hagan Lodges and drive about 55 minutes to Salzburg. Explore the centre and ${place?.name || "one main attraction"}, then continue about 1 hour 15 minutes to POP-UP LIVING in Zell am See.`;
+    if (!place) {
+      return `Check out of Hagan Lodges and drive about ${formatDriveMinutes(baseToBaseMinutes("Altaussee", "Salzburg → Zell"))} to Salzburg. Explore the centre, then allow about ${formatDriveMinutes(baseToBaseMinutes("Salzburg → Zell", "Zell am See"))} to reach POP-UP LIVING in Zell am See.`;
+    }
+    const secondStop = secondPlace
+      ? ` Continue about ${formatDriveMinutes(driveMinutesBetween(place, secondPlace))} to ${secondPlace.name}, then allow about ${formatDriveMinutes(placeToBaseMinutes(secondPlace, "Zell am See"))} to reach POP-UP LIVING.`
+      : ` Then allow about ${formatDriveMinutes(placeToBaseMinutes(place, "Zell am See"))} to reach POP-UP LIVING.`;
+    return `Check out of Hagan Lodges and drive about ${formatDriveMinutes(baseToPlaceMinutes("Altaussee", place))} to ${place.name}.${secondStop}`;
   }
   if (day.date === "2026-08-29") {
-    return "Leave POP-UP LIVING after breakfast for the roughly 4 hour 10 minute drive to the Vienna Airport area. Plan one substantial lunch and playground break, then check in and prepare for the morning flight.";
+    return `Leave POP-UP LIVING after breakfast for the roughly ${formatDriveMinutes(baseToBaseMinutes("Zell am See", "Vienna Airport"))} drive to the Vienna Airport area. Plan one substantial lunch and playground break, then check in and prepare for the morning flight.`;
   }
   if (day.date === "2026-08-30") {
     return "Make the short airport transfer early, return the car if needed and aim to be inside the terminal around 07:00-07:30 for the 10:00 flight.";
@@ -498,7 +544,7 @@ function itineraryStory(day: DayPlan, place?: Place, secondPlace?: Place) {
     return "This day has no outing yet. Choose one or two attractions and keep the rest of the day flexible.";
   }
   const secondStop = secondPlace
-    ? ` Afterward, continue about ${driveMinutesBetween(place, secondPlace)} minutes to ${secondPlace.name} and allow ${secondPlace.duration.toLowerCase()} there.`
+    ? ` Afterward, continue about ${formatDriveMinutes(driveMinutesBetween(place, secondPlace))} to ${secondPlace.name} and allow ${secondPlace.duration.toLowerCase()} there.`
     : "";
   return `Start with ${place.name}, about ${approximateDrive(place, day.base)} away. Allow ${place.duration.toLowerCase()} for the visit.${secondStop} ${place.notes}`;
 }
@@ -1883,17 +1929,17 @@ export default function TripApp() {
                       <span><Plane size={19} /></span>
                       <div><small>16 Aug · arrive 18:00</small><strong>Vienna Airport</strong><p>Airport-area overnight after landing.</p></div>
                     </div>
-                    <div className="route-drive"><CarFront size={14} /><span>About 3h 10m on 17 Aug</span></div>
+                    <div className="route-drive"><CarFront size={14} /><span>About {formatDriveMinutes(baseToBaseMinutes("Vienna Airport", "Altaussee"))} on 17 Aug</span></div>
                     <div className="route-stop home">
                       <span><House size={20} /></span>
                       <div><small>17-24 Aug · first home</small><strong>Hagan Lodges - Lodges Sandling</strong><p>Exact pin: 47.661053, 13.742943</p></div>
                     </div>
-                    <div className="route-drive"><CarFront size={14} /><span>Via Salzburg on 24 Aug · about 55m + 1h 15m</span></div>
+                    <div className="route-drive"><CarFront size={14} /><span>Via Salzburg on 24 Aug · about {formatDriveMinutes(baseToBaseMinutes("Altaussee", "Salzburg → Zell"))} + {formatDriveMinutes(baseToBaseMinutes("Salzburg → Zell", "Zell am See"))}</span></div>
                     <div className="route-stop home">
                       <span><House size={20} /></span>
                       <div><small>24-29 Aug · second home</small><strong>POP-UP LIVING Zell am See</strong><p>Karl-Flieher-Straße 1, 5700 Zell am See</p></div>
                     </div>
-                    <div className="route-drive"><CarFront size={14} /><span>About 4h 10m on 29 Aug</span></div>
+                    <div className="route-drive"><CarFront size={14} /><span>About {formatDriveMinutes(baseToBaseMinutes("Zell am See", "Vienna Airport"))} on 29 Aug</span></div>
                     <div className="route-stop airport">
                       <span><Plane size={19} /></span>
                       <div><small>30 Aug · depart 10:00</small><strong>Vienna Airport</strong><p>Final airport-area overnight on 29 Aug.</p></div>
@@ -2026,7 +2072,12 @@ export default function TripApp() {
                 <span><strong>17–29 August</strong>{selectedPlace.august_status}</span>
               </div>
               <div className="detail-grid">
-                <span><CarFront size={17} /><small>Approximate drive</small><strong>{approximateDrive(selectedPlace)}</strong></span>
+                <span>
+                  <CarFront size={17} />
+                  <small>Road-route estimate</small>
+                  <strong>{approximateDrive(selectedPlace)}</strong>
+                  {routeAccess(selectedPlace) && <em>to {routeAccess(selectedPlace)}</em>}
+                </span>
                 {collectionFor(selectedPlace) === "Attractions" ? (
                   <>
                     <span><Gauge size={17} /><small>Visit length</small><strong>{selectedPlace.duration}</strong></span>

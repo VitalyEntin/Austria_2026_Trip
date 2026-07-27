@@ -1,0 +1,97 @@
+{
+  "place-3": {
+    "lat": 47.9137696,
+    "lon": 13.8078101,
+    "access": "Grünberg cable-car valley station"
+  },
+  "place-4": {
+    "lat": 47.450376,
+    "lon": 13.617034,
+    "access": "Dachstein Südwandbahn valley station"
+  },
+  "place-5": {
+    "lat": 47.5480917,
+    "lon": 13.7053417,
+    "access": "Dachstein Krippenstein valley station"
+  },
+  "place-6": {
+    "lat": 47.5480917,
+    "lon": 13.7053417,
+    "access": "Dachstein Krippenstein valley station"
+  },
+  "place-10": {
+    "lat": 47.555532,
+    "lon": 13.645433,
+    "access": "Hallstatt P2 and Salzbergbahn valley station"
+  },
+  "place-14": {
+    "lat": 47.7407399,
+    "lon": 13.4396562,
+    "access": "SchafbergBahn valley station"
+  },
+  "place-15": {
+    "lat": 47.555532,
+    "lon": 13.645433,
+    "access": "Hallstatt P2 and Salzbergbahn valley station"
+  },
+  "place-18": {
+    "lat": 47.2292333,
+    "lon": 12.7266333,
+    "access": "Kitzsteinhorn Gletscherjet valley station"
+  },
+  "place-25": {
+    "lat": 47.5401499,
+    "lon": 13.4964661,
+    "access": "Vorderer Gosausee car park"
+  },
+  "place-26": {
+    "lat": 47.765309,
+    "lon": 13.364803,
+    "access": "Zwölferhorn cable-car valley station"
+  },
+  "place-32": {
+    "lat": 47.3264706,
+    "lon": 12.7724797,
+    "access": "Schmittenhöhebahn valley station"
+  },
+  "place-28": {
+    "lat": 47.7433771,
+    "lon": 13.9520238,
+    "access": "Almsee public car park"
+  },
+  "place-38": {
+    "lat": 47.636384,
+    "lon": 13.7683211,
+    "access": "Seeklausanger car park for Altausseer See"
+  },
+  "place-39": {
+    "lat": 47.6607781,
+    "lon": 13.7861076,
+    "access": "Loser Alm car park"
+  },
+  "place-46": {
+    "lat": 47.6412399,
+    "lon": 13.9068219,
+    "access": "Gößl road-end parking for the walk to Toplitzsee"
+  },
+  "place-65": {
+    "lat": 47.2163761,
+    "lon": 12.7260214,
+    "access": "Kesselfall Alpenhaus transfer parking"
+  },
+  "place-71": {
+    "lat": 47.6408818,
+    "lon": 13.7651568,
+    "access": "Altaussee Kurpark parking for boat or walk"
+  },
+  "place-149": {
+    "lat": 47.5480917,
+    "lon": 13.7053417,
+    "access": "Dachstein Krippenstein valley station"
+  },
+  "place-150": {
+    "lat": 47.5480917,
+    "lon": 13.7053417,
+    "access": "Dachstein Krippenstein valley station"
+  }
+}
